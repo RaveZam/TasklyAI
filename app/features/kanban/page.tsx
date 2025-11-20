@@ -11,7 +11,10 @@ import { useProjects } from "@/app/features/projects/hooks/projects-provider";
 import {
   createTask,
   getTasksByProject,
+  updateTask,
+  deleteTask,
 } from "@/app/features/tasks/services/task-service";
+import { generateTasksFromAI } from "@/app/features/ai_task_suggestions/services/ai-task-service";
 
 type GeneratedTask = {
   id: string;
@@ -36,6 +39,9 @@ export default function KanbanFeaturePage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
   const [showCreateTaskModal, setShowCreateTaskModal] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [tasksLoading, setTasksLoading] = useState(false);
 
   useEffect(() => {
@@ -109,28 +115,73 @@ export default function KanbanFeaturePage() {
 
     setIsLoading(true);
     setShowOverlay(false);
-
-    // Simulate AI thinking/loading
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    setIsLoading(false);
     setGeneratedTasks([]);
-    setShowOverlay(true);
+
+    try {
+      // Call AI service to generate tasks
+      const aiTasks = await generateTasksFromAI(projectDescription);
+
+      // Map AI tasks to GeneratedTask format
+      const mappedTasks: GeneratedTask[] = aiTasks.map((task, index) => ({
+        id: `ai-task-${Date.now()}-${index}`,
+        title: task.title,
+        description: task.description,
+        priority: task.priority,
+        due: "", // AI doesn't generate due dates
+      }));
+
+      setGeneratedTasks(mappedTasks);
+      setShowOverlay(true);
+    } catch (error) {
+      console.error("Failed to generate tasks:", error);
+      // You might want to show an error message to the user here
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Failed to generate tasks. Please try again."
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleAddToKanban = (tasksToAdd: GeneratedTask[]) => {
-    const newTasks: Task[] = tasksToAdd.map((task) => ({
-      id: `task-${Date.now()}-${task.id}`,
-      title: task.title,
-      description: task.description,
-      status: "todo",
-      priority: task.priority,
-      due: task.due,
-    }));
+  const handleAddToKanban = async (tasksToAdd: GeneratedTask[]) => {
+    if (!activeProjectId) return;
 
-    setTasks((prev) => [...prev, ...newTasks]);
-    setShowOverlay(false);
-    setProjectDescription("");
+    try {
+      // Create all tasks in Supabase for the active project
+      const createdTasks = await Promise.all(
+        tasksToAdd.map((task) =>
+          createTask({
+            projectId: activeProjectId,
+            title: task.title,
+            description: task.description,
+            priority: task.priority,
+            status: "todo",
+          })
+        )
+      );
+
+      const newTasks: Task[] = createdTasks.map((task) => ({
+        id: task.id,
+        title: task.title,
+        description: task.description || "",
+        status: (task.status as Task["status"]) || "todo",
+        priority: (task.priority as Task["priority"]) || "Medium",
+        due: "", // No due date from AI
+      }));
+
+      setTasks((prev) => [...prev, ...newTasks]);
+      setShowOverlay(false);
+      setProjectDescription("");
+    } catch (error) {
+      console.error("Failed to save AI tasks to Supabase:", error);
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Failed to save AI tasks. Please try again."
+      );
+    }
   };
 
   const handleCreateTask = async (taskData: {
@@ -163,6 +214,89 @@ export default function KanbanFeaturePage() {
       console.error("Failed to create task:", error);
       throw error;
     }
+  };
+
+  const handleEditTask = (task: Task) => {
+    setEditingTask(task);
+    setShowCreateTaskModal(true);
+  };
+
+  const handleDeleteTaskRequest = (task: Task) => {
+    setTaskToDelete(task);
+    setShowDeleteDialog(true);
+  };
+
+  const handleUpdateTask = async (taskData: {
+    title: string;
+    description?: string;
+    priority?: string;
+  }) => {
+    if (!editingTask) return;
+
+    try {
+      const updatedTask = await updateTask(editingTask.id, {
+        title: taskData.title,
+        description: taskData.description,
+        priority: taskData.priority,
+      });
+
+      const mappedTask: Task = {
+        id: updatedTask.id,
+        title: updatedTask.title,
+        description: updatedTask.description || "",
+        status: (updatedTask.status as Task["status"]) || "todo",
+        priority: (updatedTask.priority as Task["priority"]) || "Medium",
+        due: "",
+      };
+
+      setTasks((prev) =>
+        prev.map((task) => (task.id === editingTask.id ? mappedTask : task))
+      );
+      setEditingTask(null);
+    } catch (error) {
+      console.error("Failed to update task:", error);
+      throw error;
+    }
+  };
+
+  const handleModalClose = () => {
+    setShowCreateTaskModal(false);
+    setEditingTask(null);
+  };
+
+  const handleModalSubmit = async (taskData: {
+    title: string;
+    description?: string;
+    priority?: string;
+  }) => {
+    if (editingTask) {
+      await handleUpdateTask(taskData);
+    } else {
+      await handleCreateTask(taskData);
+    }
+  };
+
+  const handleConfirmDeleteTask = async () => {
+    if (!taskToDelete) return;
+
+    try {
+      await deleteTask(taskToDelete.id);
+      setTasks((prev) => prev.filter((task) => task.id !== taskToDelete.id));
+      setTaskToDelete(null);
+      setShowDeleteDialog(false);
+    } catch (error) {
+      console.error("Failed to delete task:", error);
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Failed to delete task. Please try again."
+      );
+    }
+  };
+
+  const handleCancelDeleteTask = () => {
+    setShowDeleteDialog(false);
+    setTaskToDelete(null);
   };
 
   const showKanbanSkeleton = projectsLoading || !activeProject;
@@ -276,7 +410,12 @@ export default function KanbanFeaturePage() {
               </div>
             </div>
           ) : (
-            <KanbanBoard key={activeProjectId} initialTasks={tasks} />
+            <KanbanBoard
+              key={activeProjectId}
+              initialTasks={tasks}
+              onEditTask={handleEditTask}
+              onDeleteTask={handleDeleteTaskRequest}
+            />
           )}
         </>
       )}
@@ -290,8 +429,16 @@ export default function KanbanFeaturePage() {
 
       <CreateTaskModal
         isOpen={showCreateTaskModal}
-        onClose={() => setShowCreateTaskModal(false)}
-        onSubmit={handleCreateTask}
+        onClose={handleModalClose}
+        onSubmit={handleModalSubmit}
+        task={editingTask}
+      />
+
+      <DeleteTaskDialog
+        open={showDeleteDialog}
+        taskTitle={taskToDelete?.title ?? ""}
+        onCancel={handleCancelDeleteTask}
+        onConfirm={handleConfirmDeleteTask}
       />
     </>
   );
@@ -336,6 +483,53 @@ function KanbanSkeleton() {
             </div>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+type DeleteTaskDialogProps = {
+  open: boolean;
+  taskTitle: string;
+  onCancel: () => void;
+  onConfirm: () => void;
+};
+
+function DeleteTaskDialog({
+  open,
+  taskTitle,
+  onCancel,
+  onConfirm,
+}: DeleteTaskDialogProps) {
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+      <div className="w-full max-w-md rounded-2xl border border-[#282b30] bg-[var(--surface-1)] p-6 text-gray-100 shadow-2xl">
+        <h3 className="text-lg font-semibold text-white">Delete task?</h3>
+        <p className="mt-2 text-sm text-gray-400">
+          This action cannot be undone. The task{" "}
+          <span className="font-semibold text-gray-200">
+            {taskTitle || "Untitled task"}
+          </span>{" "}
+          will be permanently removed from this project.
+        </p>
+        <div className="mt-6 flex justify-end gap-3">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="rounded-lg border border-[#282b30] px-4 py-2 text-sm font-semibold text-gray-100 transition hover:bg-[var(--surface-2)]"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            className="rounded-lg bg-[#d9534f] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#e26460]"
+          >
+            Delete Task
+          </button>
+        </div>
       </div>
     </div>
   );

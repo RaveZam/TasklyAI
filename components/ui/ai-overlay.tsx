@@ -15,7 +15,7 @@ type AIOverlayProps = {
   isOpen: boolean;
   onClose: () => void;
   generatedTasks: GeneratedTask[];
-  onAddToKanban: (tasks: GeneratedTask[]) => void;
+  onAddToKanban: (tasks: GeneratedTask[]) => Promise<void> | void;
 };
 
 export function AIOverlay({
@@ -27,6 +27,7 @@ export function AIOverlay({
   const [selectedTasks, setSelectedTasks] = useState<Set<string>>(new Set());
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editedTasks, setEditedTasks] = useState<GeneratedTask[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -63,13 +64,19 @@ export function AIOverlay({
     setEditingId(null);
   };
 
-  const handleAddToKanban = () => {
+  const handleAddToKanban = async () => {
     const tasksToAdd = editedTasks.filter((task) => selectedTasks.has(task.id));
     if (tasksToAdd.length === 0) return;
-    onAddToKanban(tasksToAdd);
-    onClose();
-    setSelectedTasks(new Set());
-    setEditedTasks([]);
+
+    setIsSaving(true);
+    try {
+      await Promise.resolve(onAddToKanban(tasksToAdd));
+      onClose();
+      setSelectedTasks(new Set());
+      setEditedTasks([]);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -221,10 +228,12 @@ export function AIOverlay({
           <button
             type="button"
             onClick={handleAddToKanban}
-            disabled={selectedTasks.size === 0}
+            disabled={selectedTasks.size === 0 || isSaving}
             className="w-full rounded-lg bg-[#7289da] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#7f97df] disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {selectedTasks.size === 0
+            {isSaving
+              ? "Adding tasks..."
+              : selectedTasks.size === 0
               ? "Select tasks to import"
               : `Add ${selectedTasks.size} Task${
                   selectedTasks.size !== 1 ? "s" : ""

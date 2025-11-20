@@ -3,16 +3,31 @@
 import { Header } from "@/components/header";
 import { Sidebar } from "@/components/sidebar";
 import { useRequireAuth } from "@/core/auth/use-require-auth";
+import { AuthTransitionScreen } from "@/components/ui/auth-transition-screen";
 
 type FeaturesLayoutProps = {
   children: React.ReactNode;
 };
 
 export default function FeaturesLayout({ children }: FeaturesLayoutProps) {
-  const { loading } = useRequireAuth();
+  const { user, loading } = useRequireAuth();
 
   if (loading) {
-    return null;
+    return (
+      <AuthTransitionScreen
+        title="Just a moment"
+        message="Syncing your workspace data."
+      />
+    );
+  }
+
+  if (!user) {
+    return (
+      <AuthTransitionScreen
+        title="Redirecting to sign in"
+        message="Your session expired. Taking you to the login screen."
+      />
+    );
   }
 
   return (

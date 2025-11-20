@@ -23,5 +23,5 @@ export function useRequireAuth(options: Options = {}): {
     }
   }, [loading, redirectTo, router, user]);
 
-  return { user, loading: loading || (!loading && !user) };
+  return { user, loading };
 }

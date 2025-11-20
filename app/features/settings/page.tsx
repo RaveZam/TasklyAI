@@ -93,14 +93,14 @@ export default function SettingsPage() {
                 Security
               </h2>
               <p className="mt-4 text-sm text-gray-300">
-                Sign out of your TasklyAI workspace. This removes your session from this
-                browser.
+                Sign out of your TasklyAI workspace. This removes your session
+                from this browser.
               </p>
             </div>
             <button
               type="button"
               onClick={() => setShowSignOutDialog(true)}
-              className="mt-6 rounded-lg border border-red-500/50 px-4 py-2 text-sm font-semibold text-red-400 transition hover:bg-red-500/10"
+              className="mt-6 rounded-lg hover:cursor-pointer border border-red-500/50 px-4 py-2 text-sm font-semibold text-red-400 transition hover:bg-red-500/10"
             >
               Sign out
             </button>
@@ -116,4 +116,3 @@ export default function SettingsPage() {
     </>
   );
 }
-

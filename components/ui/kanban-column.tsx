@@ -14,9 +14,17 @@ type ColumnProps = {
   status: Status;
   tasks: Task[];
   meta: ColumnMeta;
+  onEditTask?: (task: Task) => void;
+  onDeleteTask?: (task: Task) => void;
 };
 
-export function KanbanColumn({ status, tasks, meta }: ColumnProps) {
+export function KanbanColumn({
+  status,
+  tasks,
+  meta,
+  onEditTask,
+  onDeleteTask,
+}: ColumnProps) {
   return (
     <Droppable droppableId={status}>
       {(provided, snapshot) => (
@@ -37,7 +45,13 @@ export function KanbanColumn({ status, tasks, meta }: ColumnProps) {
 
           <div className="flex flex-1 flex-col gap-3">
             {tasks.map((task, index) => (
-              <TaskCard key={task.id} task={task} index={index} />
+              <TaskCard
+                key={task.id}
+                task={task}
+                index={index}
+                onEdit={onEditTask}
+                onDelete={onDeleteTask}
+              />
             ))}
             {provided.placeholder}
           </div>

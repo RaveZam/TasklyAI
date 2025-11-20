@@ -14,34 +14,49 @@ export function SignOutDialog({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end">
-      <button
-        type="button"
-        aria-label="Close sign out sheet"
-        className="absolute inset-0 bg-black/60"
-        onClick={onCancel}
-      />
-      <div className="relative z-10 w-full rounded-t-3xl border border-[#282b30] bg-[var(--surface-1)] p-6 text-gray-100 shadow-2xl">
-        <div className="mx-auto mb-4 h-1 w-16 rounded-full bg-[var(--surface-3)]" />
-        <h3 className="text-lg font-semibold text-white">Ready to sign out?</h3>
-        <p className="mt-2 text-sm text-gray-400">
-          Your session will be cleared on this device. You’ll need to log in
-          again to continue working.
-        </p>
-        <div className="mt-6 flex flex-col gap-3">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+      <div className="w-full max-w-sm rounded-2xl border border-[#2f3238] bg-[#1f2225] p-6 text-gray-100 shadow-2xl">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-white">Sign out?</h3>
           <button
             type="button"
-            onClick={onConfirm}
-            className="w-full rounded-xl bg-[#d9534f] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#e26460]"
+            aria-label="Close sign out dialog"
+            onClick={onCancel}
+            className="rounded-full p-1 text-gray-400 transition hover:bg-[#2a2d32] hover:text-white"
           >
-            Sign out
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
           </button>
+        </div>
+        <p className="mt-2 text-sm text-gray-400">
+          Confirm to remove your session from this browser. You’ll need to log
+          back in to continue working.
+        </p>
+        <div className="mt-6 flex justify-end gap-3">
           <button
             type="button"
             onClick={onCancel}
-            className="w-full rounded-xl border border-[#282b30] px-4 py-3 text-sm font-semibold text-gray-100 transition hover:bg-[var(--surface-2)]"
+            className="rounded-lg hover:cursor-pointer border border-[#2f3238] px-4 py-2 text-sm text-gray-300 transition hover:bg-[#2a2d32]"
           >
-            Stay logged in
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            className="rounded-lg hover:cursor-pointer bg-[#d9534f] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#e26460]"
+          >
+            Sign out
           </button>
         </div>
       </div>

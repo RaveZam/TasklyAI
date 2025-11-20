@@ -1,26 +1,47 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import type { Task } from "@/types/kanban";
+
+type TaskData = {
+  title: string;
+  description?: string;
+  priority?: string;
+};
 
 type CreateTaskModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (task: {
-    title: string;
-    description?: string;
-    priority?: string;
-  }) => Promise<void>;
+  onSubmit: (task: TaskData) => Promise<void>;
+  task?: Task | null; // If provided, modal is in edit mode
 };
 
 export function CreateTaskModal({
   isOpen,
   onClose,
   onSubmit,
+  task,
 }: CreateTaskModalProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<"Low" | "Medium" | "High" | "">("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const isEditMode = !!task;
+
+  // Populate form when task is provided (edit mode)
+  useEffect(() => {
+    if (task) {
+      setTitle(task.title);
+      setDescription(task.description || "");
+      setPriority(task.priority || "");
+    } else {
+      // Reset form for create mode
+      setTitle("");
+      setDescription("");
+      setPriority("");
+    }
+  }, [task, isOpen]);
 
   if (!isOpen) return null;
 
@@ -36,12 +57,14 @@ export function CreateTaskModal({
         priority: priority || undefined,
       });
       // Reset form
-      setTitle("");
-      setDescription("");
-      setPriority("");
+      if (!isEditMode) {
+        setTitle("");
+        setDescription("");
+        setPriority("");
+      }
       onClose();
     } catch (error) {
-      console.error("Failed to create task:", error);
+      console.error(`Failed to ${isEditMode ? "update" : "create"} task:`, error);
     } finally {
       setIsSubmitting(false);
     }
@@ -49,9 +72,11 @@ export function CreateTaskModal({
 
   const handleClose = () => {
     if (!isSubmitting) {
-      setTitle("");
-      setDescription("");
-      setPriority("");
+      if (!isEditMode) {
+        setTitle("");
+        setDescription("");
+        setPriority("");
+      }
       onClose();
     }
   };
@@ -60,7 +85,9 @@ export function CreateTaskModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
       <div className="w-full max-w-md rounded-2xl border border-[#282b30] bg-[var(--surface-1)] p-6 shadow-2xl">
         <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-white">Create New Task</h2>
+          <h2 className="text-xl font-semibold text-white">
+            {isEditMode ? "Edit Task" : "Create New Task"}
+          </h2>
           <button
             type="button"
             onClick={handleClose}
@@ -179,10 +206,10 @@ export function CreateTaskModal({
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     />
                   </svg>
-                  Creating...
+                  {isEditMode ? "Updating..." : "Creating..."}
                 </span>
               ) : (
-                "Create Task"
+                isEditMode ? "Update Task" : "Create Task"
               )}
             </button>
           </div>

@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { Header } from "@/components/header";
-import { Sidebar } from "@/components/sidebar";
 import { useRequireAuth } from "@/core/auth/use-require-auth";
 import { useProjects } from "@/app/features/projects/hooks/projects-provider";
+import { Header } from "@/components/header";
+import { Sidebar } from "@/components/sidebar";
+import { AuthTransitionScreen } from "@/components/ui/auth-transition-screen";
 
 export default function HomePage() {
   const router = useRouter();
@@ -21,7 +22,7 @@ export default function HomePage() {
     null
   );
   const [retryCount, setRetryCount] = useState(0);
-  const isAuthenticated = !!user && !authLoading;
+  const isAuthenticated = !!user;
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -58,8 +59,22 @@ export default function HomePage() {
     };
   }, [ensureDefaultProject, isAuthenticated, retryCount, router]);
 
-  if (!isAuthenticated) {
-    return null;
+  if (authLoading) {
+    return (
+      <AuthTransitionScreen
+        title="Checking your session"
+        message="Please wait while we verify your account."
+      />
+    );
+  }
+
+  if (!user) {
+    return (
+      <AuthTransitionScreen
+        title="Redirecting to sign in"
+        message="Your session ended. Hold tight while we take you to login."
+      />
+    );
   }
 
   const showSkeleton =

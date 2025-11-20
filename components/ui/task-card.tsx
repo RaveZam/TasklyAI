@@ -2,11 +2,19 @@
 
 import { Draggable } from "@hello-pangea/dnd";
 import { MoreHorizontal } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import type { Task } from "@/types/kanban";
 
 type TaskCardProps = {
   task: Task;
   index: number;
+  onEdit?: (task: Task) => void;
+  onDelete?: (task: Task) => void;
 };
 
 const priorityColors: Record<Task["priority"], string> = {
@@ -15,7 +23,7 @@ const priorityColors: Record<Task["priority"], string> = {
   Low: "bg-[#6ed0a7]",
 };
 
-export function TaskCard({ task, index }: TaskCardProps) {
+export function TaskCard({ task, index, onEdit, onDelete }: TaskCardProps) {
   return (
     <Draggable draggableId={task.id} index={index}>
       {(provided, snapshot) => (
@@ -32,10 +40,44 @@ export function TaskCard({ task, index }: TaskCardProps) {
               <p className="text-base font-semibold text-white">{task.title}</p>
               <p className="text-xs text-gray-400">{task.description}</p>
             </div>
-            <MoreHorizontal
-              className="h-4 w-4 text-gray-400 opacity-0 transition-opacity group-hover:opacity-100"
-              aria-label="Task options"
-            />
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                asChild
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
+              >
+                <button
+                  type="button"
+                  onMouseDown={(e) => {
+                    // Prevent starting a drag when interacting with the menu
+                    e.stopPropagation();
+                  }}
+                  className="rounded p-1 text-gray-400 opacity-0 transition-opacity hover:bg-[var(--surface-2)] hover:text-white group-hover:opacity-100"
+                  aria-label="Task options"
+                >
+                  <MoreHorizontal className="h-4 w-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="min-w-[160px]">
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onSelect={() => {
+                    onEdit?.(task);
+                  }}
+                >
+                  Edit Task
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="cursor-pointer text-red-400 focus:text-red-400 focus:bg-red-500/10"
+                  onSelect={() => {
+                    onDelete?.(task);
+                  }}
+                >
+                  Delete Task
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           <div className="flex items-center justify-between text-xs text-gray-400">

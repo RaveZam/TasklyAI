@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { SignOutDialog } from "@/components/ui/sign-out-dialog";
+
 type AccountMenuProps = {
   open: boolean;
   onClose: () => void;
@@ -70,15 +72,14 @@ export function AccountMenu({
           </button>
         </div>
       </div>
-      {confirmSignOut && (
-        <ConfirmSignOutModal
-          onCancel={() => setConfirmSignOut(false)}
-          onConfirm={() => {
-            onSignOut();
-            setConfirmSignOut(false);
-          }}
-        />
-      )}
+      <SignOutDialog
+        open={confirmSignOut}
+        onCancel={() => setConfirmSignOut(false)}
+        onConfirm={() => {
+          onSignOut();
+          setConfirmSignOut(false);
+        }}
+      />
     </>
   );
 }
@@ -117,37 +118,3 @@ function ThemeOptionButton({ label }: { label: string }) {
   );
 }
 
-function ConfirmSignOutModal({
-  onCancel,
-  onConfirm,
-}: {
-  onCancel: () => void;
-  onConfirm: () => void;
-}) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-      <div className="w-full max-w-sm rounded-2xl border border-[#2f3238] bg-[#1f2225] p-6 text-gray-100 shadow-2xl">
-        <h3 className="text-lg font-semibold text-white">Sign out?</h3>
-        <p className="mt-2 text-sm text-gray-400">
-          Confirm to remove your session from this browser.
-        </p>
-        <div className="mt-6 flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="rounded-lg border border-[#2f3238] px-4 py-2 text-sm text-gray-300 transition hover:bg-[#2a2d32] hover:cursor-pointer"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={onConfirm}
-            className="rounded-lg bg-[#d9534f] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#e26460] hover:cursor-pointer"
-          >
-            Sign out
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}

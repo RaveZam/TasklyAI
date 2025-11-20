@@ -30,9 +30,15 @@ const statusMeta: Record<Status, ColumnMeta> = {
 
 type KanbanBoardProps = {
   initialTasks?: Task[];
+  onEditTask?: (task: Task) => void;
+  onDeleteTask?: (task: Task) => void;
 };
 
-export function KanbanBoard({ initialTasks: propTasks }: KanbanBoardProps = {}) {
+export function KanbanBoard({
+  initialTasks: propTasks,
+  onEditTask,
+  onDeleteTask,
+}: KanbanBoardProps = {}) {
   const [allTasks, setAllTasks] = useState<Task[]>(initialTasks);
   const [columns, setColumns] = useState<Record<Status, Task[]>>(() =>
     groupByStatus(initialTasks)
@@ -85,9 +91,7 @@ export function KanbanBoard({ initialTasks: propTasks }: KanbanBoardProps = {}) 
         await updateTaskStatus(movedTask.id, destinationId);
         // Update allTasks to reflect the change
         setAllTasks((prev) =>
-          prev.map((task) =>
-            task.id === movedTask.id ? updatedTask : task
-          )
+          prev.map((task) => (task.id === movedTask.id ? updatedTask : task))
         );
       } catch (error) {
         console.error("Failed to update task status:", error);
@@ -101,9 +105,11 @@ export function KanbanBoard({ initialTasks: propTasks }: KanbanBoardProps = {}) 
     <DragDropContext onDragEnd={handleDragEnd}>
       <section className="flex flex-col gap-4 rounded-2xl border border-[#282b30] bg-[var(--surface-1)] p-6">
         <div className="flex flex-col gap-2">
-          <h2 className="text-lg font-semibold text-white">Today&apos;s Outlook</h2>
+          <h2 className="text-lg font-semibold text-white">
+            Today&apos;s Plan
+          </h2>
           <p className="text-sm text-gray-400">
-            Drag cards to keep priorities aligned. Everything stays client-side.
+            Drag, drop, and organize. Keep your day simple and focused.
           </p>
         </div>
         <div className="flex flex-row flex-wrap gap-4 md:gap-6">
@@ -113,6 +119,8 @@ export function KanbanBoard({ initialTasks: propTasks }: KanbanBoardProps = {}) 
               status={status}
               tasks={columns[status]}
               meta={statusMeta[status]}
+              onEditTask={onEditTask}
+              onDeleteTask={onDeleteTask}
             />
           ))}
         </div>
@@ -134,4 +142,3 @@ function groupByStatus(tasks: Task[]): Record<Status, Task[]> {
     }
   );
 }
-
