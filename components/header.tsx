@@ -37,16 +37,16 @@ export function Header() {
             <Image
               src="/logo/Darkmode.png"
               alt="TasklyAI Logo Darkmdode"
-              width={32}
-              height={32}
+              width={64}
+              height={64}
               className="object-contain dark:opacity-100 opacity-0"
               priority
             />
             <Image
               src="/logo/Darkmode.png"
               alt="TasklyAI Logo Lightmode"
-              width={32}
-              height={32}
+              width={64}
+              height={64}
               className="object-contain dark:opacity-0 opacity-100 absolute top-0 left-0"
               priority
             />
