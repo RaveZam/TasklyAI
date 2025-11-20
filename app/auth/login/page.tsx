@@ -50,7 +50,7 @@ export default function LoginPage() {
       const redirectTo =
         typeof window !== "undefined"
           ? `${window.location.origin}/auth/callback`
-          : "http://localhost:3000/auth/callback";
+          : "https://tasklyai.vercel.app/auth/callback";
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
