@@ -28,7 +28,8 @@ export async function POST(request: NextRequest) {
 
 For each task, provide:
 - A clear, concise title (max 50 characters)
-- A Detailed description explaining what needs to be done, you are free to explain the tasks in heavy detail to provide as much value to the user as possible.
+- A Detailed description explaining what needs to be done, you are free to explain the tasks in heavy detail to provide as much value to the user as possible. But keep it at max 3 sentences.
+
 - A priority level (Low, Medium, or High)
 
 Project description: "${description}"
