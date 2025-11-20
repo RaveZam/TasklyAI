@@ -36,15 +36,15 @@ export function Header() {
           <div className="relative flex-shrink-0">
             <Image
               src="/logo/Darkmode.png"
-              alt="TasklyAI Logo"
+              alt="TasklyAI Logo Darkmdode"
               width={32}
               height={32}
               className="object-contain dark:opacity-100 opacity-0"
               priority
             />
             <Image
-              src="/logo/Lightmode.png"
-              alt="TasklyAI Logo"
+              src="/logo/Darkmode.png"
+              alt="TasklyAI Logo Lightmode"
               width={32}
               height={32}
               className="object-contain dark:opacity-0 opacity-100 absolute top-0 left-0"

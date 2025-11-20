@@ -518,7 +518,7 @@ export function Sidebar() {
       >
         <div className="relative flex-shrink-0 ">
           <Image
-            src="logo/Darkmode.png"
+            src="/logo/Darkmode.png"
             alt="TasklyAI Logo"
             width={32}
             height={32}
@@ -526,7 +526,7 @@ export function Sidebar() {
             priority
           />
           <Image
-            src="logo/Lightmode.png"
+            src="/logo/Lightmode.png"
             alt="TasklyAI Logo"
             width={32}
             height={32}
