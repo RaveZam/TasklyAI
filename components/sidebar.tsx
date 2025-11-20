@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
@@ -32,7 +32,10 @@ export function Sidebar() {
   const [renamingProjectId, setRenamingProjectId] = useState<string | null>(
     null
   );
-  const [renameValue, setRenameValue] = useState("");
+  // Temporary state for editing project name
+  const [tempProjectName, setTempProjectName] = useState<string>("");
+  const renameInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const isFocusingRef = useRef(false);
 
   // Sync selected project with URL params when on kanban page
   useEffect(() => {
@@ -49,6 +52,52 @@ export function Sidebar() {
       setSelectedProject(projects[0].id);
     }
   }, [projects, selectedProject]);
+
+  // Keep input focused and text selected when entering rename mode
+  useEffect(() => {
+    if (renamingProjectId) {
+      const projectId = renamingProjectId;
+
+      const focusAndSelect = () => {
+        const input = renameInputRefs.current[projectId];
+        if (input && renamingProjectId === projectId) {
+          // Focus the input
+          if (document.activeElement !== input) {
+            input.focus();
+          }
+
+          setTimeout(() => {
+            const currentInput = renameInputRefs.current[projectId];
+            if (
+              currentInput &&
+              renamingProjectId === projectId &&
+              currentInput.value
+            ) {
+              // Select all text
+              currentInput.select();
+              // Use setSelectionRange for better control
+              if (currentInput.setSelectionRange) {
+                try {
+                  currentInput.setSelectionRange(0, currentInput.value.length);
+                } catch (e) {
+                  // Fallback to select()
+                  currentInput.select();
+                }
+              }
+            }
+          }, 50);
+        }
+      };
+
+      // Use requestAnimationFrame to ensure DOM is ready
+      requestAnimationFrame(() => {
+        focusAndSelect();
+        // Try again after delays to ensure it works
+        setTimeout(focusAndSelect, 100);
+        setTimeout(focusAndSelect, 300);
+      });
+    }
+  }, [renamingProjectId]);
 
   const handleCreateProject = async () => {
     setCreating(true);
@@ -78,25 +127,118 @@ export function Sidebar() {
     [router]
   );
 
-  const handleRenameClick = (projectId: string, currentName: string) => {
-    setRenamingProjectId(projectId);
-    setRenameValue(currentName);
+  const handleRenameClick = (projectId: string) => {
+    const project = projects.find((p) => p.id === projectId);
+
+    if (project) {
+      // Set rename mode state and initialize temporary name from current project name
+      setTempProjectName(project.name);
+      setRenamingProjectId(projectId);
+
+      // Wait for dropdown to close completely before focusing
+      // Radix UI dropdown has animations, so we need to wait for them to complete
+      const focusAndSelect = () => {
+        const input = renameInputRefs.current[projectId];
+        if (input) {
+          // Focus the input
+          input.focus();
+
+          // Select all text after a small delay
+          setTimeout(() => {
+            const currentInput = renameInputRefs.current[projectId];
+            if (currentInput && currentInput.value) {
+              currentInput.select();
+              // Use setSelectionRange for better control
+              if (currentInput.setSelectionRange) {
+                try {
+                  currentInput.setSelectionRange(0, currentInput.value.length);
+                } catch (e) {
+                  // Fallback to select() if setSelectionRange fails
+                  currentInput.select();
+                }
+              }
+            }
+          }, 50);
+        }
+      };
+
+      // Wait for dropdown closing animation to complete
+      // Radix UI animations typically take 150-200ms
+      // Use multiple attempts to ensure it works
+      setTimeout(() => {
+        requestAnimationFrame(() => {
+          focusAndSelect();
+          // Additional attempts in case first one doesn't work
+          setTimeout(focusAndSelect, 100);
+          setTimeout(focusAndSelect, 200);
+        });
+      }, 250); // Wait 250ms for dropdown to fully close
+    }
   };
 
-  const handleRenameSubmit = async (projectId: string) => {
-    if (!renameValue.trim()) {
-      setRenamingProjectId(null);
+  const handleRenameSave = async (projectId: string) => {
+    const trimmedName = tempProjectName.trim();
+
+    if (!trimmedName) {
+      // Empty name - if still in edit mode, do nothing and stay in edit mode
+      // Only restore old value if NOT in edit mode (shouldn't happen, but guard it)
+      if (renamingProjectId !== projectId) {
+        const project = projects.find((p) => p.id === projectId);
+        if (project) {
+          setTempProjectName(project.name);
+        }
+      }
+      // If in edit mode and empty, just return - stay in edit mode, don't restore
       return;
     }
 
-    try {
-      await updateProject(projectId, renameValue.trim());
+    const project = projects.find((p) => p.id === projectId);
+    if (!project) return;
+
+    // No change, just cancel rename mode
+    if (project.name === trimmedName) {
       setRenamingProjectId(null);
-      setRenameValue("");
+      setTempProjectName("");
+      return;
+    }
+
+    // Phase 3: Optimistic Update - Already updated in state via onChange
+    const originalName = project.name;
+    setLocalError(null);
+
+    try {
+      // Phase 4: Server Request - Actual rename
+      await updateProject(projectId, trimmedName);
+
+      // Phase 5: Success - Clear rename mode
+      setRenamingProjectId(null);
+      setTempProjectName("");
     } catch (err) {
+      // Phase 5: Failure - Rollback to original name
       setLocalError(
         err instanceof Error ? err.message : "Unable to rename project."
       );
+      // Restore original name in temporary state
+      setTempProjectName(originalName);
+      // Keep rename mode open so user can try again
+    }
+  };
+
+  const handleRenameCancel = () => {
+    setRenamingProjectId(null);
+    setTempProjectName("");
+  };
+
+  const handleRenameKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    projectId: string
+  ) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      void handleRenameSave(projectId);
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      handleRenameCancel();
     }
   };
 
@@ -155,55 +297,108 @@ export function Sidebar() {
     }
 
     return projects.map((project) => {
-      const isRenaming = renamingProjectId === project.id;
-
       return (
         <div
           key={project.id}
           className="group relative flex items-center gap-2"
+          data-project-item
         >
-          {isRenaming ? (
-            <div className="flex flex-1 items-center gap-2 rounded-lg px-3 py-2">
-              <input
-                type="text"
-                value={renameValue}
-                onChange={(e) => setRenameValue(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    void handleRenameSubmit(project.id);
-                  } else if (e.key === "Escape") {
-                    setRenamingProjectId(null);
-                    setRenameValue("");
-                  }
-                }}
-                onBlur={() => void handleRenameSubmit(project.id)}
-                autoFocus
-                className="flex-1 rounded border border-[#282b30] bg-[#1e2124] px-2 py-1 text-sm text-white outline-none focus:border-[#7289da]"
-              />
-            </div>
-          ) : (
-            <div
-              onClick={() => void handleSelectProject(project.id)}
-              className={`flex flex-1 items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition hover:cursor-pointer ${
-                selectedProject === project.id
-                  ? "bg-[var(--surface-2)] text-white"
-                  : "text-gray-400 hover:bg-[var(--surface-2)] hover:text-white"
-              }`}
+          <div
+            onClick={(e) => {
+              // If clicking on input and it's enabled (in edit mode), it will have stopped propagation
+              // If clicking on input and it's disabled, pointer-events-none makes click pass through to this div
+              // So we can just check if not in edit mode and trigger navigation
+              if (renamingProjectId !== project.id) {
+                void handleSelectProject(project.id);
+              }
+            }}
+            className={`flex flex-1 min-w-0 items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition ${
+              renamingProjectId === project.id ? "" : "hover:cursor-pointer"
+            } ${
+              selectedProject === project.id
+                ? "bg-[var(--surface-2)] text-white"
+                : "text-gray-400 hover:bg-[var(--surface-2)] hover:text-white"
+            }`}
+          >
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
             >
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
-                />
-              </svg>
-              <span className="flex-1 truncate">{project.name}</span>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+              />
+            </svg>
+
+            <input
+              ref={(el) => {
+                renameInputRefs.current[project.id] = el;
+              }}
+              type="text"
+              className={`flex-1 min-w-0 max-w-full truncate text-sm outline-none border-0 bg-transparent p-0 text-inherit ${
+                renamingProjectId !== project.id ? "pointer-events-none" : ""
+              }`}
+              value={
+                renamingProjectId === project.id
+                  ? tempProjectName
+                  : project.name
+              }
+              onChange={(e) => {
+                e.stopPropagation();
+                if (renamingProjectId === project.id) {
+                  setTempProjectName(e.target.value);
+                }
+              }}
+              onMouseDown={(e) => {
+                // Only stop propagation if input is enabled (in edit mode)
+                if (renamingProjectId === project.id) {
+                  e.stopPropagation();
+                }
+                // If disabled, let it propagate to parent to trigger navigation
+              }}
+              onClick={(e) => {
+                if (renamingProjectId === project.id) {
+                  // In edit mode: stop propagation and focus
+                  e.stopPropagation();
+                  const input = e.target as HTMLInputElement;
+                  input.focus();
+                }
+                // If disabled, pointer-events-none will let click pass through to parent
+              }}
+              onKeyDown={(e) => {
+                e.stopPropagation();
+                if (renamingProjectId === project.id) {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    // Only save if there's a value
+                    if (tempProjectName.trim()) {
+                      void handleRenameSave(project.id);
+                    }
+                    // If empty, do nothing - stay in edit mode
+                  } else if (e.key === "Escape") {
+                    e.preventDefault();
+                    handleRenameCancel();
+                  }
+                }
+              }}
+              onBlur={() => {
+                if (renamingProjectId === project.id) {
+                  // Only save if there's a value
+                  if (tempProjectName.trim()) {
+                    void handleRenameSave(project.id);
+                  }
+                  // If empty, do nothing - stay in edit mode, don't restore old value
+                }
+              }}
+              readOnly={renamingProjectId !== project.id}
+              disabled={renamingProjectId !== project.id}
+            />
+
+            {renamingProjectId !== project.id && (
               <DropdownMenu>
                 <DropdownMenuTrigger
                   asChild
@@ -232,9 +427,13 @@ export function Sidebar() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="min-w-[160px]">
                   <DropdownMenuItem
+                    onSelect={(e) => {
+                      // Don't prevent default - let dropdown close naturally
+                      // The dropdown will close automatically, then we'll focus
+                      handleRenameClick(project.id);
+                    }}
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleRenameClick(project.id, project.name);
                     }}
                     className="cursor-pointer"
                   >
@@ -251,8 +450,8 @@ export function Sidebar() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       );
     });
@@ -263,6 +462,8 @@ export function Sidebar() {
     listLoading,
     projects,
     selectedProject,
+    tempProjectName,
+    renamingProjectId,
   ]);
 
   return (
