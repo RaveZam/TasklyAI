@@ -53,7 +53,7 @@ export function TaskCard({ task, index, onEdit, onDelete }: TaskCardProps) {
                     // Prevent starting a drag when interacting with the menu
                     e.stopPropagation();
                   }}
-                  className="rounded p-1 text-gray-400 opacity-0 transition-opacity hover:bg-[var(--surface-2)] hover:text-white group-hover:opacity-100"
+                  className="rounded p-1 text-gray-400 opacity-0 hover:cursor-pointer transition-opacity hover:bg-[var(--surface-2)] hover:text-white group-hover:opacity-100"
                   aria-label="Task options"
                 >
                   <MoreHorizontal className="h-4 w-4" />

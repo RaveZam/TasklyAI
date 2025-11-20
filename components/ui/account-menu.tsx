@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 
 import { SignOutDialog } from "@/components/ui/sign-out-dialog";
@@ -64,12 +65,16 @@ export function AccountMenu({
               </div>
             )}
             <div>
-              <p className="text-base font-semibold text-white">{name}</p>
-              <p className="text-xs text-gray-400">{email}</p>
+            <p className="text-base font-semibold text-white">{name}</p>
+            <p className="text-xs text-gray-400">{email}</p>
             </div>
           </div>
           <div className="space-y-2 border-b border-[#2f3238] pb-3">
-            <MenuLink label="Account preferences" />
+            <MenuLink
+              label="Account preferences"
+              href="/features/settings"
+              onNavigate={closeAll}
+            />
           </div>
           <div className="mt-3 space-y-2 border-b border-[#2f3238] pb-3">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
@@ -77,7 +82,7 @@ export function AccountMenu({
             </p>
             <div className="space-y-1">
               {(Object.keys(themeLabels) as ThemeOption[]).map((option) => (
-                <ThemeOptionButton key={option} label={themeLabels[option]} />
+                <ThemeOptionButton key={option} option={option} />
               ))}
             </div>
           </div>
@@ -102,10 +107,19 @@ export function AccountMenu({
   );
 }
 
-function MenuLink({ label }: { label: string }) {
+function MenuLink({
+  label,
+  href,
+  onNavigate,
+}: {
+  label: string;
+  href: string;
+  onNavigate?: () => void;
+}) {
   return (
-    <button
-      type="button"
+    <Link
+      href={href}
+      onClick={onNavigate}
       className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left text-sm text-gray-300 transition hover:bg-[#2a2d32] hover:cursor-pointer"
     >
       {label}
@@ -120,18 +134,46 @@ function MenuLink({ label }: { label: string }) {
       >
         <path d="M9 18l6-6-6-6" />
       </svg>
-    </button>
+    </Link>
   );
 }
 
-function ThemeOptionButton({ label }: { label: string }) {
+function ThemeOptionButton({ option }: { option: ThemeOption }) {
+  const label = themeLabels[option];
+  const isDark = option === "dark";
   return (
     <button
       type="button"
-      className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-sm text-gray-300 transition hover:bg-[#2a2d32] hover:cursor-pointer"
+      disabled={!isDark}
+      className={`flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-sm ${
+        isDark
+          ? "text-gray-100 border border-[#2f3238] bg-[#2a2d32]"
+          : "text-gray-500 opacity-60 cursor-not-allowed"
+      }`}
     >
-      <span>{label}</span>
-      <span className="h-3 w-3 rounded-full border border-gray-500" />
+      <span>
+        {label}
+        {!isDark && (
+          <span className="ml-2 text-xs uppercase tracking-[0.2em]">
+            Coming soon
+          </span>
+        )}
+      </span>
+      {isDark ? (
+        <svg
+          className="h-4 w-4 text-[#7289da]"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      ) : (
+        <span className="h-3 w-3 rounded-full border border-gray-500" />
+      )}
     </button>
   );
 }

@@ -94,7 +94,7 @@ export default function HomePage() {
       <Sidebar />
       <div className="flex flex-1 flex-col">
         <Header />
-        <main className="flex flex-1 flex-col gap-6 px-6 py-8 lg:px-12">
+        <main className="flex flex-1 flex-col gap-6 px-6 py-4 lg:px-12">
           <section className="flex flex-col gap-4 rounded-2xl border border-[#282b30] bg-[var(--surface-1)] p-6">
             <div className="flex flex-col gap-2">
               <h2 className="text-lg font-semibold text-white">

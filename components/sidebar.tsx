@@ -49,7 +49,6 @@ export function Sidebar() {
     setIsMounted(true);
   }, []);
 
-
   // Sync selected project with URL params when on kanban page
   useEffect(() => {
     if (pathname === "/features/kanban") {
@@ -513,7 +512,10 @@ export function Sidebar() {
 
   return (
     <aside className="sticky top-0 hidden h-screen w-64 flex-col border-r border-[#282b30] bg-[var(--surface-1)] p-6 text-sm text-gray-300 lg:flex">
-      <div className="mb-8 flex items-center gap-4">
+      <Link
+        href="/features/kanban"
+        className="mb-8 flex items-center gap-4 rounded-lg border border-transparent"
+      >
         <div className="relative flex-shrink-0 ">
           <Image
             src="/logo/Darkmode.png"
@@ -536,7 +538,7 @@ export function Sidebar() {
           <p className="text-base font-semibold text-white">TasklyAI</p>
           <p className="text-xs text-gray-500">AI Kanban Board</p>
         </div>
-      </div>
+      </Link>
 
       <div className="mb-4 flex items-center justify-between">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
@@ -596,68 +598,68 @@ export function Sidebar() {
         ? createPortal(
             <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 p-4">
               <div className="w-full max-w-md rounded-2xl border border-[#2f3238] bg-[var(--surface-1)] p-6 shadow-2xl">
-            <div className="mb-4 flex items-center justify-between">
-              <div>
-                <p className="text-lg font-semibold text-white">
-                  New Project Folder
-                </p>
-                <p className="text-xs text-gray-500">
-                  Choose a name for your project folder.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={closeCreateModal}
-                disabled={creating}
-                className="rounded-lg p-2 text-gray-400 transition hover:bg-[var(--surface-2)] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <svg
-                  className="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
+                <div className="mb-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-lg font-semibold text-white">
+                      New Project Folder
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Choose a name for your project folder.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={closeCreateModal}
+                    disabled={creating}
+                    className="rounded-lg p-2 text-gray-400 transition hover:bg-[var(--surface-2)] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  <label className="block text-xs font-medium uppercase tracking-[0.2em] text-gray-500">
+                    Folder Name
+                  </label>
+                  <input
+                    type="text"
+                    value={newProjectName}
+                    onChange={(e) => setNewProjectName(e.target.value)}
+                    autoFocus
+                    className="w-full rounded-lg border border-[#2f3238] bg-transparent px-3 py-2 text-sm text-white outline-none focus:border-white"
                   />
-                </svg>
-              </button>
-            </div>
+                </div>
 
-            <div className="space-y-4">
-              <label className="block text-xs font-medium uppercase tracking-[0.2em] text-gray-500">
-                Folder Name
-              </label>
-              <input
-                type="text"
-                value={newProjectName}
-                onChange={(e) => setNewProjectName(e.target.value)}
-                autoFocus
-                className="w-full rounded-lg border border-[#2f3238] bg-transparent px-3 py-2 text-sm text-white outline-none focus:border-white"
-              />
-            </div>
-
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={closeCreateModal}
-                disabled={creating}
-                className="rounded-lg border border-[#2f3238] px-4 py-2 text-sm text-gray-300 transition hover:bg-[var(--surface-2)] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => void handleCreateProject()}
-                disabled={creating || !newProjectName.trim()}
-                className="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-black transition hover:bg-white/80 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {creating ? "Creating..." : "Create Folder"}
-              </button>
-            </div>
+                <div className="mt-6 flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={closeCreateModal}
+                    disabled={creating}
+                    className="rounded-lg border border-[#2f3238] px-4 py-2 text-sm text-gray-300 transition hover:bg-[var(--surface-2)] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void handleCreateProject()}
+                    disabled={creating || !newProjectName.trim()}
+                    className="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-black transition hover:bg-white/80 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {creating ? "Creating..." : "Create Folder"}
+                  </button>
+                </div>
               </div>
             </div>,
             document.body
