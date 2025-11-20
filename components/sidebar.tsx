@@ -518,7 +518,7 @@ export function Sidebar() {
       >
         <div className="relative flex-shrink-0 ">
           <Image
-            src="https://tasklyai.vercel.app/logo/Darkmode.ico"
+            src="tasklyai.vercel.app/logo/Darkmode.ico"
             alt="TasklyAI Logo"
             width={32}
             height={32}
@@ -526,7 +526,7 @@ export function Sidebar() {
             priority
           />
           <Image
-            src="https://tasklyai.vercel.app/logo/Darkmode.ico"
+            src="tasklyai.vercel.app/logo/Darkmode.ico"
             alt="TasklyAI Logo"
             width={32}
             height={32}
