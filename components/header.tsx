@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 import { useSupabaseUser } from "@/core/auth/use-supabase-user";
@@ -33,24 +32,11 @@ export function Header() {
     <>
       <header className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-4 border-b border-[#282b30] bg-[var(--background)]/95 px-6 py-5 backdrop-blur lg:px-10">
         <div className="flex items-center gap-3">
-          <div className="relative flex-shrink-0">
-            <Image
-              src="/logo/Darkmode.png"
-              alt="TasklyAI Logo Darkmdode"
-              width={64}
-              height={64}
-              className="object-contain dark:opacity-100 opacity-0"
-              priority
-            />
-            <Image
-              src="/logo/Darkmode.png"
-              alt="TasklyAI Logo Lightmode"
-              width={64}
-              height={64}
-              className="object-contain dark:opacity-0 opacity-100 absolute top-0 left-0"
-              priority
-            />
-          </div>
+          <img
+            src="/logo.svg"
+            alt="TasklyAI logo"
+            className="h-8 w-8 object-contain"
+          />
           <div>
             <p className="text-xs uppercase tracking-[0.4em] text-[#7289da]">
               TasklyAI

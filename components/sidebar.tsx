@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
@@ -516,24 +515,11 @@ export function Sidebar() {
         href="/features/kanban"
         className="mb-8 flex items-center gap-4 rounded-lg border border-transparent"
       >
-        <div className="relative flex-shrink-0 ">
-          <Image
-            src="/logo/Darkmode.png"
-            alt="TasklyAI Logo"
-            width={64}
-            height={64}
-            className="object-contain dark:opacity-100 opacity-0"
-            priority
-          />
-          <Image
-            src="/logo/Lightmode.png"
-            alt="TasklyAI Logo"
-            width={64}
-            height={64}
-            className="object-contain dark:opacity-0 opacity-100 absolute top-0 left-0"
-            priority
-          />
-        </div>
+        <img
+          src="/logo.svg"
+          alt="TasklyAI logo"
+          className="h-10 w-10 flex-shrink-0 object-contain"
+        />
         <div>
           <p className="text-base font-semibold text-white">TasklyAI</p>
           <p className="text-xs text-gray-500">AI Kanban Board</p>
