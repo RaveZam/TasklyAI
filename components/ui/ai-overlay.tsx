@@ -31,7 +31,7 @@ export function AIOverlay({
 
   useEffect(() => {
     if (isOpen) {
-      setSelectedTasks(new Set(generatedTasks.map((t) => t.id)));
+      setSelectedTasks(new Set());
       setEditedTasks(generatedTasks);
       setEditingId(null);
     }
@@ -87,7 +87,7 @@ export function AIOverlay({
             <h2 className="text-xl font-semibold text-white">
               AI Generated Tasks
             </h2>
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-gray-300">
               Review and select tasks to add to your Kanban board
             </p>
           </div>
@@ -115,7 +115,7 @@ export function AIOverlay({
         <div className="flex-1 overflow-y-auto p-6">
           <div className="flex flex-col gap-3">
             {editedTasks.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-[#2f3238] bg-[var(--surface-2)]/70 p-8 text-center text-sm text-gray-400">
+              <div className="rounded-xl border border-dashed border-[#2f3238] bg-[var(--surface-2)]/70 p-8 text-center text-sm text-gray-300">
                 No AI-generated tasks yet. Connect your data source or run a
                 prompt to populate this list.
               </div>
@@ -176,7 +176,7 @@ export function AIOverlay({
                                 )
                               }
                               onBlur={() => setEditingId(null)}
-                              className="rounded-lg border border-[#282b30] bg-[var(--surface-3)] px-3 py-2 text-sm text-gray-300 outline-none focus:border-[#7289da]"
+                              className="rounded-lg border border-[#282b30] bg-[var(--surface-3)] px-3 py-2 text-sm text-gray-200 outline-none focus:border-[#7289da]"
                               rows={2}
                             />
                           </div>
@@ -185,7 +185,7 @@ export function AIOverlay({
                             <p className="font-semibold text-white">
                               {task.title}
                             </p>
-                            <p className="text-sm text-gray-400">
+                            <p className="text-sm text-gray-200">
                               {task.description}
                             </p>
                           </div>
@@ -202,14 +202,14 @@ export function AIOverlay({
                           >
                             {task.priority}
                           </span>
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-gray-300">
                             {task.due}
                           </span>
                           {!isEditing && (
                             <button
                               type="button"
                               onClick={() => handleEdit(task.id)}
-                              className="text-xs text-[#7289da] transition hover:text-[#7f97df]"
+                              className="text-xs text-[#8aa2ff] transition hover:text-[#a4b7ff]"
                             >
                               Edit
                             </button>
