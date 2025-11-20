@@ -10,6 +10,8 @@ type AccountMenuProps = {
   onSignOut: () => void;
   name: string;
   email: string;
+  avatarUrl?: string | null;
+  fallbackInitial?: string;
 };
 
 type ThemeOption = "dark" | "light";
@@ -25,6 +27,8 @@ export function AccountMenu({
   onSignOut,
   name,
   email,
+  avatarUrl,
+  fallbackInitial = "G",
 }: AccountMenuProps) {
   const [confirmSignOut, setConfirmSignOut] = useState(false);
 
@@ -46,9 +50,23 @@ export function AccountMenu({
           className="absolute right-6 top-20 w-64 rounded-2xl border border-[#2f3238] bg-[#1f2225] p-4 text-sm text-gray-200 shadow-2xl"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="mb-4">
-            <p className="text-base font-semibold text-white">{name}</p>
-            <p className="text-xs text-gray-400">{email}</p>
+          <div className="mb-4 flex items-center gap-3">
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt={`${name} avatar`}
+                className="h-10 w-10 rounded-full object-cover"
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#2f3238] text-sm font-semibold text-white">
+                {fallbackInitial}
+              </div>
+            )}
+            <div>
+              <p className="text-base font-semibold text-white">{name}</p>
+              <p className="text-xs text-gray-400">{email}</p>
+            </div>
           </div>
           <div className="space-y-2 border-b border-[#2f3238] pb-3">
             <MenuLink label="Account preferences" />

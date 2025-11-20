@@ -5,6 +5,11 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 import { useSupabaseUser } from "@/core/auth/use-supabase-user";
+import {
+  getUserAvatarUrl,
+  getUserDisplayName,
+  getUserInitial,
+} from "@/core/auth/user-profile";
 import { getSupabaseClient } from "@/core/supabase/client";
 import { AccountMenu } from "@/components/ui/account-menu";
 
@@ -14,11 +19,9 @@ export function Header() {
   const [showAccountMenu, setShowAccountMenu] = useState(false);
 
   const email = user?.email ?? "guest@taskly.ai";
-  const derivedName =
-    (user?.user_metadata?.full_name as string | undefined) ??
-    email.split("@")[0] ??
-    "Guest";
-  const initial = derivedName.charAt(0).toUpperCase();
+  const derivedName = getUserDisplayName(user);
+  const avatarUrl = getUserAvatarUrl(user);
+  const initial = getUserInitial(derivedName);
 
   const handleConfirmSignOut = async () => {
     await getSupabaseClient().auth.signOut();
@@ -64,9 +67,18 @@ export function Header() {
             <p className="text-sm font-semibold text-white">{derivedName}</p>
             <p className="text-xs text-gray-400">{email}</p>
           </div>
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#36393e] text-sm font-semibold text-white">
-            {initial}
-          </div>
+          {avatarUrl ? (
+            <img
+              src={avatarUrl}
+              alt={`${derivedName}'s avatar`}
+              referrerPolicy="no-referrer"
+              className="h-10 w-10 rounded-full object-cover"
+            />
+          ) : (
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#36393e] text-sm font-semibold text-white">
+              {initial}
+            </div>
+          )}
         </button>
       </header>
       <AccountMenu
@@ -75,6 +87,8 @@ export function Header() {
         onSignOut={handleConfirmSignOut}
         name={derivedName}
         email={email}
+        avatarUrl={avatarUrl}
+        fallbackInitial={initial}
       />
     </>
   );

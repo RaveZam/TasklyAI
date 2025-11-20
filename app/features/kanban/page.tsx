@@ -304,7 +304,32 @@ export default function KanbanFeaturePage() {
   return (
     <>
       {showKanbanSkeleton ? (
-        <KanbanSkeleton />
+        <div className="flex min-h-[320px] items-center justify-center rounded-2xl border border-[#282b30] bg-[var(--surface-1)] p-12">
+          <div className="flex flex-col items-center gap-3">
+            <svg
+              className="h-8 w-8 animate-spin text-[#7289da]"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              />
+            </svg>
+            <p className="text-sm text-gray-400">
+              Loading your workspace. One moment…
+            </p>
+          </div>
+        </div>
       ) : (
         <>
           <div className="flex items-center justify-between gap-4">
@@ -443,51 +468,6 @@ export default function KanbanFeaturePage() {
     </>
   );
 }
-
-function KanbanSkeleton() {
-  return (
-    <div className="space-y-6">
-      <div className="h-8 w-48 animate-pulse rounded bg-[#3a3d42]" />
-
-      <section className="rounded-2xl border border-[#282b30] bg-[var(--surface-1)] p-6">
-        <div className="mb-6 space-y-3">
-          <div className="h-5 w-40 animate-pulse rounded bg-[#3a3d42]" />
-          <div className="h-4 w-64 animate-pulse rounded bg-[#2d3035]" />
-        </div>
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <div className="h-12 flex-1 animate-pulse rounded-lg bg-[#1e2124]" />
-          <div className="h-12 w-40 animate-pulse rounded-lg bg-[#2d3035]" />
-        </div>
-      </section>
-
-      <div className="grid gap-4 md:grid-cols-3">
-        {[1, 2, 3].map((col) => (
-          <div
-            key={col}
-            className="rounded-2xl border border-[#282b30] bg-[var(--surface-1)] p-4"
-          >
-            <div className="mb-4 h-5 w-32 animate-pulse rounded bg-[#2d3035]" />
-            <div className="space-y-3">
-              {[1, 2, 3].map((card) => (
-                <div
-                  key={`${col}-${card}`}
-                  className="rounded-xl border border-[#2f3238] bg-[#1f2225] p-3"
-                >
-                  <div className="mb-2 h-4 w-2/3 animate-pulse rounded bg-[#2d3035]" />
-                  <div className="space-y-2">
-                    <div className="h-3 w-full animate-pulse rounded bg-[#2d3035]" />
-                    <div className="h-3 w-5/6 animate-pulse rounded bg-[#2d3035]" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 type DeleteTaskDialogProps = {
   open: boolean;
   taskTitle: string;
