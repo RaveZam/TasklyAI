@@ -1,30 +1,269 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
-type Project = { id: string; name: string; board: string };
-
-const initialProjects: Project[] = [];
+import { useProjects } from "@/app/features/projects/hooks/projects-provider";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export function Sidebar() {
-  const [projects, setProjects] = useState(initialProjects);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const {
+    projects,
+    loading,
+    listLoading,
+    error,
+    createProject: createNewProject,
+    updateProject,
+    deleteProject,
+  } = useProjects();
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
+  const [renamingProjectId, setRenamingProjectId] = useState<string | null>(
+    null
+  );
+  const [renameValue, setRenameValue] = useState("");
 
-  const handleCreateProject = () => {
-    setProjects((prev) => {
-      const newProject = {
-        id: String(Date.now()),
-        name: `Untitled Project ${prev.length + 1}`,
-        board: "Tasks Board",
-      };
-      if (!selectedProject) {
-        setSelectedProject(newProject.id);
+  // Sync selected project with URL params when on kanban page
+  useEffect(() => {
+    if (pathname === "/features/kanban") {
+      const projectIdFromUrl = searchParams.get("project");
+      if (projectIdFromUrl && projects.some((p) => p.id === projectIdFromUrl)) {
+        setSelectedProject(projectIdFromUrl);
       }
-      return [...prev, newProject];
-    });
+    }
+  }, [pathname, searchParams, projects]);
+
+  useEffect(() => {
+    if (projects.length > 0 && !selectedProject) {
+      setSelectedProject(projects[0].id);
+    }
+  }, [projects, selectedProject]);
+
+  const handleCreateProject = async () => {
+    setCreating(true);
+    setLocalError(null);
+    try {
+      const suffix = projects.length + 1;
+      const project = await createNewProject(`Untitled Project ${suffix}`);
+      if (project) {
+        setSelectedProject(project.id);
+        router.push(`/features/kanban?project=${project.id}`);
+      }
+    } catch (err) {
+      setLocalError(
+        err instanceof Error ? err.message : "Unable to create a project."
+      );
+    } finally {
+      setCreating(false);
+    }
   };
+
+  const handleSelectProject = useCallback(
+    (projectId: string) => {
+      setSelectedProject(projectId);
+      setLocalError(null);
+      router.push(`/features/kanban?project=${projectId}`);
+    },
+    [router]
+  );
+
+  const handleRenameClick = (projectId: string, currentName: string) => {
+    setRenamingProjectId(projectId);
+    setRenameValue(currentName);
+  };
+
+  const handleRenameSubmit = async (projectId: string) => {
+    if (!renameValue.trim()) {
+      setRenamingProjectId(null);
+      return;
+    }
+
+    try {
+      await updateProject(projectId, renameValue.trim());
+      setRenamingProjectId(null);
+      setRenameValue("");
+    } catch (err) {
+      setLocalError(
+        err instanceof Error ? err.message : "Unable to rename project."
+      );
+    }
+  };
+
+  const handleDeleteClick = async (projectId: string) => {
+    if (!confirm("Are you sure you want to delete this project?")) {
+      return;
+    }
+
+    try {
+      await deleteProject(projectId);
+
+      // If deleted project was selected, navigate to first project or home
+      if (selectedProject === projectId) {
+        const remainingProjects = projects.filter((p) => p.id !== projectId);
+        if (remainingProjects.length > 0) {
+          router.push(`/features/kanban?project=${remainingProjects[0].id}`);
+        } else {
+          router.push("/");
+        }
+      }
+    } catch (err) {
+      setLocalError(
+        err instanceof Error ? err.message : "Unable to delete project."
+      );
+    }
+  };
+
+  const projectListState = useMemo(() => {
+    if (listLoading) {
+      return (
+        <div className="space-y-3">
+          {[1, 2, 3].map((item) => (
+            <div
+              key={item}
+              className="h-10 rounded-lg border border-[#2f3238] bg-[#1e2124] animate-pulse"
+            />
+          ))}
+        </div>
+      );
+    }
+
+    if (error || localError) {
+      return (
+        <p className="rounded-lg border border-dashed border-[#2f3238] px-3 py-4 text-center text-xs text-red-400">
+          {error ?? localError}
+        </p>
+      );
+    }
+
+    if (projects.length === 0) {
+      return (
+        <p className="rounded-lg border border-dashed border-[#2f3238] px-3 py-4 text-center text-xs text-gray-500">
+          No projects yet
+        </p>
+      );
+    }
+
+    return projects.map((project) => {
+      const isRenaming = renamingProjectId === project.id;
+
+      return (
+        <div
+          key={project.id}
+          className="group relative flex items-center gap-2"
+        >
+          {isRenaming ? (
+            <div className="flex flex-1 items-center gap-2 rounded-lg px-3 py-2">
+              <input
+                type="text"
+                value={renameValue}
+                onChange={(e) => setRenameValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    void handleRenameSubmit(project.id);
+                  } else if (e.key === "Escape") {
+                    setRenamingProjectId(null);
+                    setRenameValue("");
+                  }
+                }}
+                onBlur={() => void handleRenameSubmit(project.id)}
+                autoFocus
+                className="flex-1 rounded border border-[#282b30] bg-[#1e2124] px-2 py-1 text-sm text-white outline-none focus:border-[#7289da]"
+              />
+            </div>
+          ) : (
+            <div
+              onClick={() => void handleSelectProject(project.id)}
+              className={`flex flex-1 items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition hover:cursor-pointer ${
+                selectedProject === project.id
+                  ? "bg-[var(--surface-2)] text-white"
+                  : "text-gray-400 hover:bg-[var(--surface-2)] hover:text-white"
+              }`}
+            >
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+                />
+              </svg>
+              <span className="flex-1 truncate">{project.name}</span>
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  asChild
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
+                >
+                  <button
+                    type="button"
+                    className="rounded p-1 text-gray-500 opacity-0 transition hover:bg-[var(--surface-2)] hover:text-white group-hover:opacity-100 hover:cursor-pointer"
+                  >
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"
+                      />
+                    </svg>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="min-w-[160px]">
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRenameClick(project.id, project.name);
+                    }}
+                    className="cursor-pointer"
+                  >
+                    Rename Project
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      void handleDeleteClick(project.id);
+                    }}
+                    className="cursor-pointer text-red-400 focus:text-red-400 focus:bg-red-500/10"
+                  >
+                    Delete Project
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          )}
+        </div>
+      );
+    });
+  }, [
+    error,
+    handleSelectProject,
+    localError,
+    listLoading,
+    projects,
+    selectedProject,
+  ]);
 
   return (
     <aside className="sticky top-0 hidden h-screen w-64 flex-col border-r border-[#282b30] bg-[var(--surface-1)] p-6 text-sm text-gray-300 lg:flex">
@@ -126,7 +365,8 @@ export function Sidebar() {
         <button
           type="button"
           onClick={handleCreateProject}
-          className="rounded-lg p-1.5 text-gray-500 transition hover:bg-[var(--surface-2)] hover:text-white"
+          disabled={creating}
+          className="rounded-lg p-1.5 text-gray-500 transition hover:bg-[var(--surface-2)] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
         >
           <svg
             className="h-4 w-4"
@@ -144,41 +384,7 @@ export function Sidebar() {
         </button>
       </div>
 
-      <nav className="flex flex-1 flex-col gap-1">
-        {projects.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-[#2f3238] px-3 py-4 text-center text-xs text-gray-500">
-            No projects yet
-          </p>
-        ) : (
-          projects.map((project) => (
-            <button
-              key={project.id}
-              type="button"
-              onClick={() => setSelectedProject(project.id)}
-              className={`flex items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition ${
-                selectedProject === project.id
-                  ? "bg-[var(--surface-2)] text-white"
-                  : "text-gray-400 hover:bg-[var(--surface-2)] hover:text-white"
-              }`}
-            >
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
-                />
-              </svg>
-              {project.name}
-            </button>
-          ))
-        )}
-      </nav>
+      <nav className="flex flex-1 flex-col gap-1">{projectListState}</nav>
     </aside>
   );
 }

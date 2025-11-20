@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Space_Grotesk } from "next/font/google";
 import "./globals.css";
+import { AppProviders } from "./providers";
 
 const sans = Plus_Jakarta_Sans({
   variable: "--font-geist-sans",
@@ -24,10 +25,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body
-        className={`${sans.variable} ${mono.variable} antialiased`}
-      >
-        {children}
+      <body className={`${sans.variable} ${mono.variable} antialiased`}>
+        <AppProviders>{children}</AppProviders>
       </body>
     </html>
   );

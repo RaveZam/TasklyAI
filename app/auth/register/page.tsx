@@ -33,7 +33,7 @@ export default function RegisterPage() {
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/features/auth/login`,
+        emailRedirectTo: `${window.location.origin}/auth/login`,
       },
     });
 
@@ -129,7 +129,7 @@ export default function RegisterPage() {
 
         <p className="mt-6 text-center text-sm text-gray-400">
           Already have an account?{" "}
-          <Link href="/features/auth/login" className="text-[#7289da]">
+          <Link href="/auth/login" className="text-[#7289da]">
             Sign in
           </Link>
         </p>

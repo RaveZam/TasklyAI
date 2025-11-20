@@ -98,7 +98,7 @@ export default function LoginPage() {
 
         <p className="mt-6 text-center text-sm text-gray-400">
           New here?{" "}
-          <Link href="/features/auth/register" className="text-[#7289da]">
+          <Link href="/auth/register" className="text-[#7289da]">
             Create an account
           </Link>
         </p>

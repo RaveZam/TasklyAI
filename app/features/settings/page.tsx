@@ -30,7 +30,7 @@ export default function SettingsPage() {
   const handleConfirmSignOut = async () => {
     await getSupabaseClient().auth.signOut();
     setShowSignOutDialog(false);
-    router.replace("/features/auth/login");
+    router.replace("/auth/login");
   };
 
   return (

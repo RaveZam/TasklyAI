@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 import { KanbanBoard } from "@/components/ui/kanban-board";
 import { AIOverlay } from "@/components/ui/ai-overlay";
 import type { Task } from "@/types/kanban";
+import { useProjects } from "@/app/features/projects/hooks/projects-provider";
 
 type GeneratedTask = {
   id: string;
@@ -15,11 +17,40 @@ type GeneratedTask = {
 };
 
 export default function KanbanFeaturePage() {
+  const searchParams = useSearchParams();
+  const {
+    projects,
+    loading: projectsLoading,
+    error: projectsError,
+    ensureDefaultProject,
+  } = useProjects();
   const [projectDescription, setProjectDescription] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showOverlay, setShowOverlay] = useState(false);
   const [generatedTasks, setGeneratedTasks] = useState<GeneratedTask[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
+
+  useEffect(() => {
+    void ensureDefaultProject();
+  }, [ensureDefaultProject]);
+
+  useEffect(() => {
+    if (projects.length > 0) {
+      // Get project ID from URL params first, then fallback to first project
+      const projectIdFromUrl = searchParams.get("project");
+      const projectIdToUse =
+        projectIdFromUrl && projects.some((p) => p.id === projectIdFromUrl)
+          ? projectIdFromUrl
+          : projects[0].id;
+      setActiveProjectId(projectIdToUse);
+    }
+  }, [projects, searchParams]);
+
+  const activeProject = useMemo(
+    () => projects.find((project) => project.id === activeProjectId) ?? null,
+    [activeProjectId, projects],
+  );
 
   const handleGenerate = async () => {
     if (!projectDescription.trim()) return;
@@ -50,64 +81,79 @@ export default function KanbanFeaturePage() {
     setProjectDescription("");
   };
 
+  const showKanbanSkeleton = projectsLoading || !activeProject;
+
   return (
     <>
-      <section className="flex flex-col gap-4 rounded-2xl border border-[#282b30] bg-[var(--surface-1)] p-6">
-        <div className="flex flex-col gap-2">
-          <h2 className="text-lg font-semibold text-white">Generate Your Task</h2>
-          <p className="text-sm text-gray-400">
-            What tasks do you wanna work on next? I&apos;ll break them down for you to help
-            with your goals.
-          </p>
-        </div>
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <input
-            id="suggestion"
-            type="text"
-            value={projectDescription}
-            onChange={(e) => setProjectDescription(e.target.value)}
-            placeholder="What do you want to work on next?"
-            className="w-full rounded-lg border border-[#282b30] bg-[#1e2124] px-4 py-3 text-gray-100 outline-none transition focus:border-[#7289da] focus:ring-2 focus:ring-[#7289da]/30"
-            disabled={isLoading}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !isLoading) {
-                handleGenerate();
-              }
-            }}
-          />
-          <button
-            type="button"
-            onClick={handleGenerate}
-            disabled={isLoading || !projectDescription.trim()}
-            className="rounded-lg bg-[#7289da] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#7f97df] disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {isLoading ? (
-              <span className="flex items-center gap-2">
-                <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  />
-                </svg>
-                Thinking...
-              </span>
-            ) : (
-              "Generate"
-            )}
-          </button>
-        </div>
-      </section>
+      {showKanbanSkeleton ? (
+        <KanbanSkeleton />
+      ) : (
+        <>
+          <h1 className="text-2xl font-semibold text-white">
+            {activeProject?.name ?? "No project found"}
+          </h1>
+          {projectsError && (
+            <p className="text-sm text-red-400">{projectsError}</p>
+          )}
 
-      <KanbanBoard initialTasks={tasks} />
+          <section className="flex flex-col gap-4 rounded-2xl border border-[#282b30] bg-[var(--surface-1)] p-6">
+            <div className="flex flex-col gap-2">
+              <h2 className="text-lg font-semibold text-white">Generate Your Task</h2>
+              <p className="text-sm text-gray-400">
+                What tasks do you wanna work on next? I&apos;ll break them down for you to help
+                with your goals.
+              </p>
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <input
+                id="suggestion"
+                type="text"
+                value={projectDescription}
+                onChange={(e) => setProjectDescription(e.target.value)}
+                placeholder="What do you want to work on next?"
+                className="w-full rounded-lg border border-[#282b30] bg-[#1e2124] px-4 py-3 text-gray-100 outline-none transition focus:border-[#7289da] focus:ring-2 focus:ring-[#7289da]/30"
+                disabled={isLoading}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !isLoading) {
+                    handleGenerate();
+                  }
+                }}
+              />
+              <button
+                type="button"
+                onClick={handleGenerate}
+                disabled={isLoading || !projectDescription.trim()}
+                className="rounded-lg bg-[#7289da] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#7f97df] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isLoading ? (
+                  <span className="flex items-center gap-2">
+                    <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                    Thinking...
+                  </span>
+                ) : (
+                  "Generate"
+                )}
+              </button>
+            </div>
+          </section>
+
+          <KanbanBoard initialTasks={tasks} />
+        </>
+      )}
 
       <AIOverlay
         isOpen={showOverlay}
@@ -116,6 +162,50 @@ export default function KanbanFeaturePage() {
         onAddToKanban={handleAddToKanban}
       />
     </>
+  );
+}
+
+function KanbanSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="h-8 w-48 animate-pulse rounded bg-[#3a3d42]" />
+
+      <section className="rounded-2xl border border-[#282b30] bg-[var(--surface-1)] p-6">
+        <div className="mb-6 space-y-3">
+          <div className="h-5 w-40 animate-pulse rounded bg-[#3a3d42]" />
+          <div className="h-4 w-64 animate-pulse rounded bg-[#2d3035]" />
+        </div>
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <div className="h-12 flex-1 animate-pulse rounded-lg bg-[#1e2124]" />
+          <div className="h-12 w-40 animate-pulse rounded-lg bg-[#2d3035]" />
+        </div>
+      </section>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        {[1, 2, 3].map((col) => (
+          <div
+            key={col}
+            className="rounded-2xl border border-[#282b30] bg-[var(--surface-1)] p-4"
+          >
+            <div className="mb-4 h-5 w-32 animate-pulse rounded bg-[#2d3035]" />
+            <div className="space-y-3">
+              {[1, 2, 3].map((card) => (
+                <div
+                  key={`${col}-${card}`}
+                  className="rounded-xl border border-[#2f3238] bg-[#1f2225] p-3"
+                >
+                  <div className="mb-2 h-4 w-2/3 animate-pulse rounded bg-[#2d3035]" />
+                  <div className="space-y-2">
+                    <div className="h-3 w-full animate-pulse rounded bg-[#2d3035]" />
+                    <div className="h-3 w-5/6 animate-pulse rounded bg-[#2d3035]" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
