@@ -116,7 +116,7 @@ Only return the JSON array, no additional text or markdown formatting.`;
           task.description &&
           ["Low", "Medium", "High"].includes(task.priority)
       )
-      .slice(0, 5) // Limit to 5 tasks max
+      .slice(0, 12) // Limit to 12 tasks max
       .map((task) => ({
         title: String(task.title).trim(),
         description: String(task.description).trim(),
