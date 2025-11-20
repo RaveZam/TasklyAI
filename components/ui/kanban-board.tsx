@@ -4,6 +4,7 @@ import { DragDropContext, type DropResult } from "@hello-pangea/dnd";
 import { useState, useEffect } from "react";
 import type { Status, Task } from "@/types/kanban";
 import { KanbanColumn, type ColumnMeta } from "@/components/ui/kanban-column";
+import { updateTaskStatus } from "@/app/features/tasks/services/task-service";
 
 const initialTasks: Task[] = [];
 
@@ -39,23 +40,13 @@ export function KanbanBoard({ initialTasks: propTasks }: KanbanBoardProps = {}) 
 
   // Update columns when propTasks change
   useEffect(() => {
-    if (propTasks && propTasks.length > 0) {
-      setAllTasks((prevTasks) => {
-        // Get existing task IDs to avoid duplicates
-        const existingIds = new Set(prevTasks.map((t) => t.id));
-        const newTasks = propTasks.filter((t) => !existingIds.has(t.id));
-        
-        if (newTasks.length > 0) {
-          const combinedTasks = [...prevTasks, ...newTasks];
-          setColumns(groupByStatus(combinedTasks));
-          return combinedTasks;
-        }
-        return prevTasks;
-      });
-    }
-  }, [propTasks?.length]);
+    // Always sync with propTasks - replace all tasks when propTasks changes
+    const tasksToUse = propTasks ?? [];
+    setAllTasks(tasksToUse);
+    setColumns(groupByStatus(tasksToUse));
+  }, [propTasks]);
 
-  const handleDragEnd = (result: DropResult) => {
+  const handleDragEnd = async (result: DropResult) => {
     const { destination, source } = result;
     if (!destination) return;
 
@@ -65,6 +56,9 @@ export function KanbanBoard({ initialTasks: propTasks }: KanbanBoardProps = {}) 
     if (sourceId === destinationId && source.index === destination.index) {
       return;
     }
+
+    // Store previous state for potential revert
+    const previousColumns = { ...columns };
 
     const sourceTasks = Array.from(columns[sourceId]);
     const [movedTask] = sourceTasks.splice(source.index, 1);
@@ -77,11 +71,30 @@ export function KanbanBoard({ initialTasks: propTasks }: KanbanBoardProps = {}) 
     const updatedTask = { ...movedTask, status: destinationId };
     destinationTasks.splice(destination.index, 0, updatedTask);
 
+    // Optimistically update the UI
     setColumns((prev) => ({
       ...prev,
       [sourceId]: sourceId === destinationId ? destinationTasks : sourceTasks,
       [destinationId]: destinationTasks,
     }));
+
+    // Update task status in database
+    // Only update if the status actually changed
+    if (sourceId !== destinationId) {
+      try {
+        await updateTaskStatus(movedTask.id, destinationId);
+        // Update allTasks to reflect the change
+        setAllTasks((prev) =>
+          prev.map((task) =>
+            task.id === movedTask.id ? updatedTask : task
+          )
+        );
+      } catch (error) {
+        console.error("Failed to update task status:", error);
+        // Revert the optimistic update on error
+        setColumns(previousColumns);
+      }
+    }
   };
 
   return (

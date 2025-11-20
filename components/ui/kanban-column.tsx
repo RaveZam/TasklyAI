@@ -23,11 +23,11 @@ export function KanbanColumn({ status, tasks, meta }: ColumnProps) {
         <div
           ref={provided.innerRef}
           {...provided.droppableProps}
-          className={`flex w-full flex-col gap-4 rounded-xl border border-[#282b30] bg-[var(--surface-2)] p-5 transition-colors md:flex-1 ${
+          className={`flex w-full flex-col gap-4 rounded-xl border border-[#282b30] bg-[#1a1d21] p-5 transition-colors md:flex-1 ${
             snapshot.isDraggingOver ? "ring-2 ring-[#7289da]/40" : ""
           }`}
         >
-          <header className="flex flex-col gap-1 rounded-lg border border-[#282b30] bg-[var(--surface-3)] p-4">
+          <header className="flex flex-col gap-1 rounded-lg border border-[#282b30] bg-[#1f2225] p-4">
             <div className="flex items-center justify-between">
               <p className="text-base font-semibold text-white">{meta.title}</p>
               <span className="text-xs text-gray-400">{tasks.length} cards</span>
