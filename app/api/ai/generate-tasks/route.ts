@@ -24,12 +24,11 @@ export async function POST(request: NextRequest) {
     const model = "gemini-2.5-flash-lite";
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
-    const prompt = `You are a task management assistant for students and small teams. Based on the following project description, generate 8 minimum and 12 maximum specific, actionable tasks that would help accomplish this goal. Tasks should be short and concise but detailed enough to be actionable, Your goal is to provide a detailed roadmap to the user to help them accomplish their goal.
+    const prompt = `You are a task management assistant for students and small teams. Based on the following project description, generate 3 minimum and 5 maximum specific, actionable tasks that would help accomplish this goal. Tasks should be short and concise but detailed enough to be actionable.
 
 For each task, provide:
 - A clear, concise title (max 50 characters)
-- A Detailed description explaining what needs to be done, you are free to explain the tasks in heavy detail to provide as much value to the user as possible. But keep it at max 3 sentences.
-
+- A Simple Description of the task in 1-2 sentences Keep it short and concise.
 - A priority level (Low, Medium, or High)
 
 Project description: "${description}"

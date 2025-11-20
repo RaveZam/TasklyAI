@@ -1,13 +1,7 @@
 "use client";
 
+import { useState } from "react";
 import { Draggable } from "@hello-pangea/dnd";
-import { MoreHorizontal } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import type { Task } from "@/types/kanban";
 
 type TaskCardProps = {
@@ -24,80 +18,157 @@ const priorityColors: Record<Task["priority"], string> = {
 };
 
 export function TaskCard({ task, index, onEdit, onDelete }: TaskCardProps) {
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+
+  const handleOpenDetails = () => {
+    setIsDetailOpen(true);
+  };
+
+  const handleCloseDetails = () => {
+    setIsDetailOpen(false);
+  };
+
+  const handleEditFromModal = () => {
+    onEdit?.(task);
+    handleCloseDetails();
+  };
+
+  const handleDeleteFromModal = () => {
+    onDelete?.(task);
+    handleCloseDetails();
+  };
+
   return (
-    <Draggable draggableId={task.id} index={index}>
-      {(provided, snapshot) => (
-        <div
-          ref={provided.innerRef}
-          {...provided.draggableProps}
-          {...provided.dragHandleProps}
-          className={`group rounded-xl border border-[#282b30] bg-[#15171a] p-4 text-sm text-gray-100 transition ${
-            snapshot.isDragging ? "ring-2 ring-[#7289da]/60" : ""
-          }`}
-        >
-          <div className="mb-3 flex items-start justify-between gap-3">
-            <div>
-              <p className="text-base font-semibold text-white">{task.title}</p>
-              <p className="text-xs text-gray-400">{task.description}</p>
+    <>
+      <Draggable draggableId={task.id} index={index}>
+        {(provided, snapshot) => (
+          <div
+            ref={provided.innerRef}
+            {...provided.draggableProps}
+            {...provided.dragHandleProps}
+            onClick={handleOpenDetails}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                handleOpenDetails();
+              }
+            }}
+            className={`group rounded-xl border border-[#282b30] bg-[#15171a] p-4 text-base text-gray-100 transition focus:outline-none focus:ring-2 focus:ring-[#7289da]/60 ${
+              snapshot.isDragging ? "ring-2 ring-[#7289da]/60" : ""
+            }`}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <p className="text-lg font-medium text-gray-200">{task.title}</p>
+              <div className="flex items-center gap-2">
+                <div
+                  className={`rounded-full px-3 py-1 text-xs font-semibold uppercase text-gray-900 ${
+                    priorityColors[task.priority]
+                  }`}
+                  aria-label={`${task.priority} priority`}
+                >
+                  {task.priority}
+                </div>
+              </div>
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                asChild
-                onClick={(e) => {
-                  e.stopPropagation();
-                }}
+
+            <div className="mt-3 flex items-center justify-between text-sm text-gray-300">
+              <div className="flex items-center gap-2">
+                <span>{task.due}</span>
+              </div>
+              <span className="uppercase tracking-[0.3em] text-[#7289da]">
+                {task.status === "todo" && "Queued"}
+                {task.status === "inProgress" && "Active"}
+                {task.status === "done" && "Complete"}
+              </span>
+            </div>
+          </div>
+        )}
+      </Draggable>
+
+      {isDetailOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="w-full max-w-lg rounded-2xl border border-[#2f3238] bg-[#1f2225] p-6 text-gray-100 shadow-2xl">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-xl font-semibold text-white">
+                  {task.title}
+                </h3>
+                <p className="mt-2 text-base leading-relaxed text-gray-300">
+                  {task.description || "No description provided for this task."}
+                </p>
+              </div>
+              <button
+                type="button"
+                aria-label="Close task details"
+                onClick={handleCloseDetails}
+                className="rounded-full p-1 text-gray-400 transition hover:cursor-pointer hover:bg-[#2a2d32] hover:text-white"
               >
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <div className="mt-6 space-y-4 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400">Priority</span>
+                <span
+                  className={`${
+                    priorityColors[task.priority]
+                  } rounded-full px-3 py-1 text-sm font-semibold text-[#1e2124]`}
+                >
+                  {task.priority}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400">Status</span>
+                <span className="text-white">
+                  {task.status === "todo" && "Queued"}
+                  {task.status === "inProgress" && "Active"}
+                  {task.status === "done" && "Complete"}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400">Due date</span>
+                <span className="text-white">{task.due}</span>
+              </div>
+            </div>
+
+            <div className="mt-8 flex flex-wrap justify-end gap-3">
+              {onEdit && (
                 <button
                   type="button"
-                  onMouseDown={(e) => {
-                    // Prevent starting a drag when interacting with the menu
-                    e.stopPropagation();
-                  }}
-                  className="rounded p-1 text-gray-400 opacity-0 hover:cursor-pointer transition-opacity hover:bg-[var(--surface-2)] hover:text-white group-hover:opacity-100"
-                  aria-label="Task options"
-                >
-                  <MoreHorizontal className="h-4 w-4" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="min-w-[160px]">
-                <DropdownMenuItem
-                  className="cursor-pointer"
-                  onSelect={() => {
-                    onEdit?.(task);
-                  }}
+                  onClick={handleEditFromModal}
+                  className="rounded-lg bg-[#7289da] px-4 py-2 text-sm font-semibold text-white transition hover:cursor-pointer hover:bg-[#7f97df]"
                 >
                   Edit Task
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="cursor-pointer text-red-400 focus:text-red-400 focus:bg-red-500/10"
-                  onSelect={() => {
-                    onDelete?.(task);
-                  }}
+                </button>
+              )}
+              {onDelete && (
+                <button
+                  type="button"
+                  onClick={handleDeleteFromModal}
+                  className="rounded-lg bg-[#d9534f] px-4 py-2 text-sm font-semibold text-white transition hover:cursor-pointer hover:bg-[#e26460]"
                 >
                   Delete Task
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-
-          <div className="flex items-center justify-between text-xs text-gray-400">
-            <div className="flex items-center gap-2">
-              <div
-                className={`h-1.5 w-16 rounded-full ${
-                  priorityColors[task.priority]
-                }`}
-                aria-label={`${task.priority} priority`}
-              />
-              <span>{task.due}</span>
+                </button>
+              )}
             </div>
-            <span className="uppercase tracking-[0.3em] text-[#7289da]">
-              {task.status === "todo" && "Queued"}
-              {task.status === "inProgress" && "Active"}
-              {task.status === "done" && "Complete"}
-            </span>
           </div>
         </div>
       )}
-    </Draggable>
+    </>
   );
 }
