@@ -462,55 +462,57 @@ export function SidebarContent({ onProjectSelect }: SidebarContentProps) {
 
   return (
     <>
-      <div className="flex flex-col h-full min-h-0">
-        <div className="flex-1 overflow-y-auto min-h-0">
-          <Link
-            href="/features/kanban"
-            className="mb-8 flex items-center gap-4 rounded-lg border border-transparent"
-          >
-            <img
-              src="/logo.svg"
-              alt="TasklyAI logo"
-              className="h-10 w-10 flex-shrink-0 object-contain"
-            />
-            <div>
-              <p className="text-base font-semibold text-white">TasklyAI</p>
-              <p className="text-xs text-gray-500">AI Kanban Board</p>
-            </div>
-          </Link>
-
-          <div className="mb-4 flex items-center justify-between">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
-              Main Menu
-            </p>
-            <button
-              type="button"
-              onClick={openCreateModal}
-              disabled={creating}
-              className="rounded-lg p-1.5 text-gray-500 transition hover:bg-[var(--surface-2)] hover:text-white hover:cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
-            </button>
+      <div className="flex flex-col h-full">
+        <Link
+          href="/features/kanban"
+          className="mb-8 flex items-center gap-4 rounded-lg border border-transparent flex-shrink-0"
+        >
+          <img
+            src="/logo.svg"
+            alt="TasklyAI logo"
+            className="h-10 w-10 flex-shrink-0 object-contain"
+          />
+          <div>
+            <p className="text-base font-semibold text-white">TasklyAI</p>
+            <p className="text-xs text-gray-500">AI Kanban Board</p>
           </div>
+        </Link>
 
-          <nav className="mb-4 flex flex-col gap-1">{projectListState}</nav>
+        <div className="mb-4 flex items-center justify-between flex-shrink-0">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
+            Main Menu
+          </p>
+          <button
+            type="button"
+            onClick={openCreateModal}
+            disabled={creating}
+            className="rounded-lg p-1.5 text-gray-500 transition hover:bg-[var(--surface-2)] hover:text-white hover:cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+          </button>
         </div>
-        <div className="flex-shrink-0 mt-auto">
+
+        <nav className="flex-1 overflow-y-auto min-h-0 flex flex-col gap-1">
+          {projectListState}
+        </nav>
+
+        {/* Settings link - Desktop only (not shown on mobile) */}
+        {!onProjectSelect && (
           <Link
             href="/features/settings"
-            className="flex items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-gray-400 transition hover:bg-[var(--surface-2)] hover:text-white"
+            className="flex-shrink-0 flex items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-gray-400 transition hover:bg-[var(--surface-2)] hover:text-white mt-6"
           >
             <svg
               className="h-4 w-4"
@@ -533,7 +535,7 @@ export function SidebarContent({ onProjectSelect }: SidebarContentProps) {
             </svg>
             Settings
           </Link>
-        </div>
+        )}
       </div>
 
       {isMounted && isCreateModalOpen

@@ -90,6 +90,13 @@ export function AccountMenu({
               ))}
             </div>
           </div>
+          <div className="mt-3 space-y-2">
+            <MenuLink
+              label="Settings"
+              href="/features/settings"
+              onNavigate={closeAll}
+            />
+          </div>
           <button
             type="button"
             onClick={handleSignOutClick}

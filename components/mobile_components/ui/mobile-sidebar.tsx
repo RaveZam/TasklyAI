@@ -54,11 +54,11 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
 
       {/* Mobile Sidebar */}
       <aside
-        className={`fixed left-0 top-0 z-[9999] flex h-screen w-64 flex-col border-r border-[#282b30] bg-[var(--surface-1)] text-sm text-gray-300 shadow-2xl transition-transform duration-300 ease-in-out ${
+        className={`fixed left-0 top-0 z-[9999] flex h-dvh h-screen w-64 flex-col border-r border-[#282b30] bg-[var(--surface-1)] text-sm text-gray-300 shadow-2xl transition-transform duration-300 ease-in-out ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="flex h-full flex-col p-6">
+        <div className="flex h-full flex-col overflow-hidden p-6">
           <SidebarContent onProjectSelect={onClose} />
         </div>
       </aside>
