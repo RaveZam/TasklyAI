@@ -26,6 +26,14 @@ export function Header({ onMenuClick }: HeaderProps) {
   const avatarUrl = getUserAvatarUrl(user);
   const initial = getUserInitial(derivedName);
 
+  // Truncate email if longer than 25 characters
+  const truncateEmail = (email: string, maxLength: number = 25) => {
+    if (email.length <= maxLength) return email;
+    return email.substring(0, maxLength) + "...";
+  };
+
+  const displayEmail = truncateEmail(email);
+
   const handleConfirmSignOut = async () => {
     await getSupabaseClient().auth.signOut();
     // setShowSignOutDialog(false);
@@ -74,11 +82,11 @@ export function Header({ onMenuClick }: HeaderProps) {
         <button
           type="button"
           onClick={() => setShowAccountMenu((prev) => !prev)}
-          className="flex hover:cursor-pointer items-center gap-3 rounded-xl border border-[#282b30] px-4 py-2 text-left transition hover:border-[#7289da]"
+          className="flex hover:cursor-pointer items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-[var(--surface-2)] lg:px-4 lg:py-2"
         >
-          <div className="text-right">
+          <div className="text-right hidden lg:block">
             <p className="text-sm font-semibold text-white">{derivedName}</p>
-            <p className="text-xs text-gray-400">{email}</p>
+            <p className="text-xs text-gray-400 truncate max-w-[200px]">{displayEmail}</p>
           </div>
           {avatarUrl ? (
             <img

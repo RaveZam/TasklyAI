@@ -64,9 +64,13 @@ export function AccountMenu({
                 {fallbackInitial}
               </div>
             )}
-            <div>
-            <p className="text-base font-semibold text-white">{name}</p>
-            <p className="text-xs text-gray-400">{email}</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-base font-semibold text-white truncate">
+                {name}
+              </p>
+              <p className="text-xs text-gray-400 truncate max-w-[100px]">
+                {email}
+              </p>
             </div>
           </div>
           <div className="space-y-2 border-b border-[#2f3238] pb-3">
@@ -177,4 +181,3 @@ function ThemeOptionButton({ option }: { option: ThemeOption }) {
     </button>
   );
 }
-
