@@ -58,7 +58,7 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="flex h-full flex-col overflow-hidden p-6">
+        <div className="flex h-full flex-col p-6">
           <SidebarContent onProjectSelect={onClose} />
         </div>
       </aside>
