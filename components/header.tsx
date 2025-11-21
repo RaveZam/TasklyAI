@@ -12,7 +12,11 @@ import {
 import { getSupabaseClient } from "@/core/supabase/client";
 import { AccountMenu } from "@/components/ui/account-menu";
 
-export function Header() {
+type HeaderProps = {
+  onMenuClick?: () => void;
+};
+
+export function Header({ onMenuClick }: HeaderProps) {
   const router = useRouter();
   const { user } = useSupabaseUser();
   const [showAccountMenu, setShowAccountMenu] = useState(false);
@@ -32,6 +36,29 @@ export function Header() {
     <>
       <header className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-4 border-b border-[#282b30] bg-[var(--background)]/95 px-6 py-5 backdrop-blur lg:px-10">
         <div className="flex items-center gap-3">
+          {/* Hamburger Menu Button - Mobile Only */}
+          {onMenuClick && (
+            <button
+              type="button"
+              onClick={onMenuClick}
+              className="lg:hidden rounded-lg p-2 text-gray-400 transition hover:bg-[var(--surface-2)] hover:text-white"
+              aria-label="Open menu"
+            >
+              <svg
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              </svg>
+            </button>
+          )}
           <img
             src="/logo.svg"
             alt="TasklyAI logo"

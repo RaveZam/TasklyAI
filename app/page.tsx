@@ -7,6 +7,7 @@ import { useRequireAuth } from "@/core/auth/use-require-auth";
 import { useProjects } from "@/app/features/projects/hooks/projects-provider";
 import { Header } from "@/components/header";
 import { Sidebar } from "@/components/sidebar";
+import { MobileSidebar } from "@/components/mobile_components/ui/mobile-sidebar";
 import { AuthTransitionScreen } from "@/components/ui/auth-transition-screen";
 
 export default function HomePage() {
@@ -22,6 +23,7 @@ export default function HomePage() {
     null
   );
   const [retryCount, setRetryCount] = useState(0);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const isAuthenticated = !!user;
 
   useEffect(() => {
@@ -93,7 +95,7 @@ export default function HomePage() {
     <div className="flex min-h-screen bg-[var(--background)] text-gray-100">
       <Sidebar />
       <div className="flex flex-1 flex-col">
-        <Header />
+        <Header onMenuClick={() => setIsMobileSidebarOpen(true)} />
         <main className="flex flex-1 flex-col gap-6 px-6 py-4 lg:px-12">
           <section className="flex flex-col gap-4 rounded-2xl border border-[#282b30] bg-[var(--surface-1)] p-6">
             <div className="flex flex-col gap-2">
@@ -118,6 +120,10 @@ export default function HomePage() {
           </section>
         </main>
       </div>
+      <MobileSidebar
+        isOpen={isMobileSidebarOpen}
+        onClose={() => setIsMobileSidebarOpen(false)}
+      />
     </div>
   );
 }
