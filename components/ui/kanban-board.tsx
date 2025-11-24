@@ -22,7 +22,7 @@ const statusMeta: Record<Status, ColumnMeta> = {
     label: "Live",
   },
   done: {
-    title: "Done",
+    title: "Complete",
     description: "Recently completed",
     label: "Complete",
   },

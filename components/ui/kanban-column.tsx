@@ -18,6 +18,18 @@ type ColumnProps = {
   onDeleteTask?: (task: Task) => void;
 };
 
+const columnTintStyles: Record<Status, string> = {
+  todo: "bg-[#1a1d21]",
+  inProgress: "bg-[#151923]",
+  done: "bg-[#101712]",
+};
+
+const columnHeaderTintStyles: Record<Status, string> = {
+  todo: "bg-[#1f2225]",
+  inProgress: "bg-[#1a1f2b]",
+  done: "bg-[#141c16]",
+};
+
 export function KanbanColumn({
   status,
   tasks,
@@ -31,14 +43,18 @@ export function KanbanColumn({
         <div
           ref={provided.innerRef}
           {...provided.droppableProps}
-          className={`flex w-full flex-col gap-4 rounded-xl border border-[#282b30] bg-[#1a1d21] p-5 transition-colors md:flex-1 ${
+          className={`flex w-full flex-col gap-4 rounded-xl p-5 transition-colors md:flex-1 ${
             snapshot.isDraggingOver ? "ring-2 ring-[#7289da]/40" : ""
-          }`}
+          } ${columnTintStyles[status]}`}
         >
-          <header className="flex flex-col gap-1 rounded-lg border border-[#282b30] bg-[#1f2225] p-4">
+          <header
+            className={`flex flex-col gap-1 rounded-lg border border-[#282b30]/40 p-4 ${columnHeaderTintStyles[status]}`}
+          >
             <div className="flex items-center justify-between">
               <p className="text-base font-semibold text-white">{meta.title}</p>
-              <span className="text-xs text-gray-400">{tasks.length} cards</span>
+              <span className="text-xs text-gray-400">
+                {tasks.length} cards
+              </span>
             </div>
             <p className="text-xs text-gray-400">{meta.description}</p>
           </header>
@@ -60,4 +76,3 @@ export function KanbanColumn({
     </Droppable>
   );
 }
-

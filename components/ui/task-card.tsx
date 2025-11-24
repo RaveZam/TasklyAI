@@ -17,6 +17,12 @@ const priorityColors: Record<Task["priority"], string> = {
   Low: "bg-[#6ed0a7]",
 };
 
+const statusBorderTints: Record<Task["status"], string> = {
+  todo: "border-[#282b30]",
+  inProgress: "border-[#325072]",
+  done: "border-[#294533]",
+};
+
 export function TaskCard({ task, index, onEdit, onDelete }: TaskCardProps) {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
@@ -55,12 +61,14 @@ export function TaskCard({ task, index, onEdit, onDelete }: TaskCardProps) {
                 handleOpenDetails();
               }
             }}
-            className={`group rounded-xl border border-[#282b30] bg-[#15171a] p-4 text-base text-gray-100 transition focus:outline-none focus:ring-2 focus:ring-[#7289da]/60 ${
+            className={`group rounded-xl border ${
+              statusBorderTints[task.status]
+            } bg-[var(--surface-1)] p-4 text-base text-gray-200 transition focus:outline-none focus:ring-2 focus:ring-[#7289da]/60 ${
               snapshot.isDragging ? "ring-2 ring-[#7289da]/60" : ""
             }`}
           >
             <div className="flex items-start justify-between gap-3">
-              <p className="text-lg font-medium text-gray-200">{task.title}</p>
+              <p className="text-lg font-medium text-gray-300">{task.title}</p>
               <div className="flex items-center gap-2">
                 <div
                   className={`rounded-full px-3 py-1 text-xs font-semibold uppercase text-gray-900 ${
