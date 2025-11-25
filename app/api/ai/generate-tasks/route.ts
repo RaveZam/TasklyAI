@@ -20,29 +20,45 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Use Gemini 1.5 Flash (free tier, fast model)
+    // Use Gemini 2.5 Flash (free tier, fast model)
     const model = "gemini-2.5-flash-lite";
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
-    const prompt = `You are a task management assistant for students and small teams. Based on the following project description, generate 3 minimum and 5 maximum specific, actionable tasks that would help accomplish this goal. Tasks should be short and concise but detailed enough to be actionable.
+    const prompt = `You are an expert task management assistant specializing in helping students and small teams break down projects into actionable next steps. Your goal is to generate a prioritized, sequential list of tasks that will help users make immediate progress toward their project goal.
 
-For each task, provide:
-- A clear, concise title (max 50 characters)
-- A Simple Description of the task in 1-2 sentences Keep it short and concise.
-- A priority level (Low, Medium, or High)
-
-Project description: "${description}"
-
-Return the response as a JSON array of tasks with this exact format:
-[
-  {
-    "title": "Task title here",
-    "description": "Task description here",
-    "priority": "Low", "Medium", or "High"
-  }
-]
-
-Only return the JSON array, no additional text or markdown formatting.`;
+    Based on the following project description, generate 3-5 specific, actionable tasks that represent the logical next steps to accomplish this goal. Consider:
+    
+    1. **Task Sequencing**: Order tasks logically - foundational tasks should come before dependent ones. Think about what needs to happen first to unblock other work.
+    
+    2. **Actionability**: Each task should be:
+       - Specific enough that someone knows exactly what to do
+       - Small enough to be completed in a reasonable timeframe (hours to a few days)
+       - Clear about the deliverable or outcome
+    
+    3. **Priority Assignment**:
+       - **High**: Critical path items, blockers for other tasks, or time-sensitive work
+       - **Medium**: Important but not blocking, or can be done in parallel
+       - **Low**: Nice-to-have, can be deferred, or polish/optimization work
+    
+    4. **Context Awareness**: 
+       - For academic projects: Consider research, planning, and documentation needs
+       - For team projects: Consider collaboration, communication, and coordination tasks
+       - Break down large goals into smaller, manageable chunks
+    
+    Project description: "${description}"
+    
+    Generate tasks that represent the immediate next steps (not the entire project). Focus on what should be done first to make progress.
+    
+    Return the response as a JSON array of tasks with this exact format:
+    [
+      {
+        "title": "Task title here (max 50 characters)",
+        "description": "Clear, actionable description in 1-2 sentences explaining what needs to be done and why",
+        "priority": "Low" | "Medium" | "High"
+      }
+    ]
+    
+    Only return the JSON array, no additional text or markdown formatting.`;
 
     const response = await fetch(url, {
       method: "POST",

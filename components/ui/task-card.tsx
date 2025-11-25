@@ -18,9 +18,9 @@ const priorityColors: Record<Task["priority"], string> = {
 };
 
 const statusBorderTints: Record<Task["status"], string> = {
-  todo: "border-[#282b30]",
-  inProgress: "border-[#325072]",
-  done: "border-[#294533]",
+  todo: "border-[#1f2124]",
+  inProgress: "border-[#1f2530]",
+  done: "border-[#1a211c]",
 };
 
 export function TaskCard({ task, index, onEdit, onDelete }: TaskCardProps) {
