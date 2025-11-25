@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Use Gemini 2.5 Flash (free tier, fast model)
-    const model = "gemini-2.5-flash-lite";
+    const model = "gemini-2.5-flash";
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
     const prompt = `You are an expert task management assistant specializing in helping students and small teams break down projects into actionable next steps. Your goal is to generate a prioritized, sequential list of tasks that will help users make immediate progress toward their project goal.

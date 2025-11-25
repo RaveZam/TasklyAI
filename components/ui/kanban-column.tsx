@@ -51,8 +51,26 @@ export function KanbanColumn({
             className={`flex flex-col gap-1 rounded-lg border border-[#282b30]/40 p-4 ${columnHeaderTintStyles[status]}`}
           >
             <div className="flex items-center justify-between">
-              <p className="text-base font-semibold text-white">{meta.title}</p>
-              <span className="text-xs text-gray-400">
+              <p
+                className={`text-base font-semibold ${
+                  status === "done"
+                    ? "text-[#2f9f63]"
+                    : status === "inProgress"
+                    ? "text-[#2f7afc]"
+                    : "text-[#9ea2ad]"
+                }`}
+              >
+                {meta.title}
+              </p>
+              <span
+                className={`text-xs ${
+                  status === "done"
+                    ? "text-[#2f9f63]"
+                    : status === "inProgress"
+                    ? "text-[#2f7afc]"
+                    : "text-gray-400"
+                }`}
+              >
                 {tasks.length} cards
               </span>
             </div>
