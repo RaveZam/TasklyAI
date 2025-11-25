@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
 
     const prompt = `You are an expert task management assistant specializing in helping students and small teams break down projects into actionable next steps. Your goal is to generate a prioritized, sequential list of tasks that will help users make immediate progress toward their project goal.
 
-    Based on the following project description, generate 3-5 specific, actionable tasks that represent the logical next steps to accomplish this goal. Consider:
+    Based on the following project description, generate 5-7 specific, actionable tasks that represent the logical next steps to accomplish this goal. Consider:
     
     1. **Task Sequencing**: Order tasks logically - foundational tasks should come before dependent ones. Think about what needs to happen first to unblock other work.
     
@@ -41,6 +41,8 @@ export async function POST(request: NextRequest) {
        - **Low**: Nice-to-have, can be deferred, or polish/optimization work
     
     4. **Context Awareness**: 
+       - For projects that seem to you already has progress, consider the next steps to take to complete the project, skip the introductions and just focus on detailing the tasks that are left to complete the project.
+       - For Coding Projects: Consider code structure, testing, configuring 3rd party services and debugging needs
        - For academic projects: Consider research, planning, and documentation needs
        - For team projects: Consider collaboration, communication, and coordination tasks
        - Break down large goals into smaller, manageable chunks
