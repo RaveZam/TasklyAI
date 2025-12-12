@@ -6,7 +6,10 @@ TasklyAI keeps productivity simple — create tasks, drag them across a kanban b
 
 Features
 
-🗂 Kanban Board (To Do → Doing → Done)
+🗂 Kanban Board (To Do → Doing → Done) 
+
+![HomePage](https://res.cloudinary.com/dcdgu2fxc/image/upload/v1765523028/TasklyAI_wgocl7.jpg)
+![HomePage](https://res.cloudinary.com/dcdgu2fxc/image/upload/v1765523342/TaskGeneration_yxdibj.jpg)
 
 ✨ AI-Assisted Task Generation
 
@@ -34,10 +37,6 @@ Supabase Postgres + Row Level Security
 
 TailwindCSS (if you want to mention styling) 
 
-
-
-![HomePage](https://res.cloudinary.com/dcdgu2fxc/image/upload/v1765523028/TasklyAI_wgocl7.jpg)
-![HomePage](https://res.cloudinary.com/dcdgu2fxc/image/upload/v1765523342/TaskGeneration_yxdibj.jpg)
 
 How It Works
 
