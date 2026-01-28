@@ -18,6 +18,7 @@ import {
   deleteProject,
   type ProjectRecord,
 } from "@/app/features/projects/services/project-service";
+import { useEnsureOneProject } from "./useEnsureOneProject";
 
 const DEFAULT_PROJECT_NAME = "Untitled Project";
 
@@ -40,9 +41,6 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
   const [projects, setProjects] = useState<ProjectRecord[]>([]);
   const [listLoading, setListLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const ensureDefaultPromiseRef = useRef<Promise<ProjectRecord | null> | null>(
-    null
-  );
   const projectsRef = useRef<ProjectRecord[]>([]);
   const [isEnsuringDefault, setIsEnsuringDefault] = useState(false);
   const loadStateRef = useRef<{
@@ -119,8 +117,8 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
 
       try {
         const created = await createProject({
-          userId: user.id,
           name,
+          userId: user.id,
         });
         setProjects((prev) => [...prev, created]);
         return created;
@@ -130,58 +128,20 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
         );
         throw err;
       } finally {
-        // Do nothing here to avoid toggling the shared loading state.
+     
       }
     },
     [user?.id]
   );
 
-  const ensureDefaultProject = useCallback(async () => {
-    if (!user?.id) {
-      return null;
-    }
-
-    if (projectsRef.current.length > 0) {
-      return projectsRef.current[0];
-    }
-
-    if (ensureDefaultPromiseRef.current) {
-      return ensureDefaultPromiseRef.current;
-    }
-
-    const promise = (async () => {
-      setIsEnsuringDefault(true);
-      setError(null);
-
-      try {
-        const currentProjects = await readProjects();
-        if (currentProjects.length > 0) {
-          return currentProjects[0];
-        }
-
-        const created = await createProject({
-          userId: user.id,
-          name: DEFAULT_PROJECT_NAME,
-        });
-        setProjects([created]);
-        projectsRef.current = [created];
-        return created;
-      } catch (err) {
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Unable to create your first project."
-        );
-        throw err;
-      } finally {
-        setIsEnsuringDefault(false);
-        ensureDefaultPromiseRef.current = null;
-      }
-    })();
-
-    ensureDefaultPromiseRef.current = promise;
-    return promise;
-  }, [readProjects, user?.id]);
+  const ensureDefaultProject = useEnsureOneProject({
+    userId: user?.id,
+    projectsRef,
+    readProjects,
+    setProjects,
+    setError,
+    setIsEnsuringDefault,
+  });
 
   const updateProjectName = useCallback(
     async (id: string, name: string) => {
