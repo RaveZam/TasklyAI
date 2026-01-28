@@ -11,6 +11,7 @@ import {
 } from "@/core/auth/user-profile";
 import { getSupabaseClient } from "@/core/supabase/client";
 import { AccountMenu } from "@/components/ui/account-menu";
+import { MembersSection } from "./members_section";
 
 type HeaderProps = {
   onMenuClick?: () => void;
@@ -67,17 +68,13 @@ export function Header({ onMenuClick }: HeaderProps) {
               </svg>
             </button>
           )}
-          <img
-            src="/logo.svg"
-            alt="TasklyAI logo"
-            className="h-8 w-8 object-contain"
+          
+          <MembersSection
+            avatarUrl={avatarUrl}
+            derivedName={derivedName}
+            initial={initial}
           />
-          <div>
-            <p className="text-xs uppercase tracking-[0.4em] text-[#7289da]">
-              TasklyAI
-            </p>
-            <h1 className="text-xl font-semibold text-white">Kanban Board</h1>
-          </div>
+   
         </div>
         <button
           type="button"

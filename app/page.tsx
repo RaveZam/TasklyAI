@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { useRequireAuth } from "@/core/auth/use-require-auth";
 import { useProjects } from "@/app/features/projects/hooks/projects-provider";
-import { Header } from "@/components/header";
+import { Header } from "@/components/header_components/header";
 import { Sidebar } from "@/components/sidebar";
 import { MobileSidebar } from "@/components/mobile_components/ui/mobile-sidebar";
 import { AuthTransitionScreen } from "@/components/ui/auth-transition-screen";

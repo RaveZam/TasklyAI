@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Header } from "@/components/header";
+import { Header } from "@/components/header_components/header";
 import { Sidebar } from "@/components/sidebar";
 import { MobileSidebar } from "@/components/mobile_components/ui/mobile-sidebar";
 import { useRequireAuth } from "@/core/auth/use-require-auth";
