@@ -8,6 +8,7 @@ export type TaskRecord = {
   priority: string | null;
   status: string | null;
   created_at: string | null;
+  assigned_to: string | null;
 };
 
 const TABLE_NAME = "tasks";
@@ -18,6 +19,7 @@ export async function createTask(input: {
   description?: string;
   priority?: string;
   status?: string;
+  assignedTo?: string | null;
 }): Promise<TaskRecord> {
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
@@ -28,6 +30,7 @@ export async function createTask(input: {
       description: input.description ?? null,
       priority: input.priority ?? null,
       status: input.status ?? "todo",
+      assigned_to: input.assignedTo ?? null,
     })
     .select("*")
     .single();

@@ -55,6 +55,7 @@ export function CreateTaskModal({
         title: title.trim(),
         description: description.trim() || undefined,
         priority: priority || undefined,
+        
       });
       // Reset form
       if (!isEditMode) {

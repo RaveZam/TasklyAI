@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { Folder } from "lucide-react";
 
 import { useProjects } from "@/app/features/projects/hooks/projects-provider";
 import type { ProjectRecord } from "@/app/features/projects/services/project-service";
@@ -484,6 +485,18 @@ export function SidebarContent({ onProjectSelect }: SidebarContentProps) {
             <p className="text-base font-semibold text-white">TasklyAI</p>
             <p className="text-xs text-gray-500">AI Kanban Board</p>
           </div>
+        </Link>
+
+        <Link
+          href="/features/inbox"
+          className={`mb-4 flex flex-shrink-0 items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition hover:bg-[var(--surface-2)] hover:text-white ${
+            pathname === "/features/inbox"
+              ? "bg-[var(--surface-2)] text-white"
+              : "text-gray-400"
+          }`}
+        >
+          <Folder className="h-4 w-4 shrink-0" />
+          Inbox
         </Link>
 
         <div className="mb-4 flex items-center justify-between flex-shrink-0">
