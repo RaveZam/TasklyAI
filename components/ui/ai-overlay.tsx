@@ -11,6 +11,98 @@ type GeneratedTask = {
   due: string;
 };
 
+type AIOverlayTaskItemProps = {
+  task: GeneratedTask;
+  isSelected: boolean;
+  isEditing: boolean;
+  onToggleSelect: () => void;
+  onStartEdit: () => void;
+  onChange: (patch: Partial<Pick<GeneratedTask, "title" | "description">>) => void;
+  onStopEdit: () => void;
+};
+
+function AIOverlayTaskItem({
+  task,
+  isSelected,
+  isEditing,
+  onToggleSelect,
+  onStartEdit,
+  onChange,
+  onStopEdit,
+}: AIOverlayTaskItemProps) {
+  return (
+    <div
+      className={`rounded-xl border p-4 transition ${
+        isSelected
+          ? "border-[#7289da] bg-[#7289da]/10"
+          : "border-[#282b30] bg-[var(--surface-2)]"
+      }`}
+    >
+      <div className="flex items-start gap-3">
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={onToggleSelect}
+          className="mt-1 h-4 w-4 rounded border-[#282b30] bg-[var(--surface-3)] text-[#7289da] focus:ring-[#7289da]"
+        />
+        <div className="flex-1">
+          {isEditing ? (
+            <div className="flex flex-col gap-2">
+              <input
+                type="text"
+                value={task.title}
+                onChange={(e) => onChange({ title: e.target.value })}
+                onBlur={onStopEdit}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") onStopEdit();
+                }}
+                className="rounded-lg border border-[#282b30] bg-[var(--surface-3)] px-3 py-2 text-white outline-none focus:border-[#7289da]"
+                autoFocus
+              />
+              <textarea
+                value={task.description}
+                onChange={(e) => onChange({ description: e.target.value })}
+                onBlur={onStopEdit}
+                className="rounded-lg border border-[#282b30] bg-[var(--surface-3)] px-3 py-2 text-sm text-gray-200 outline-none focus:border-[#7289da]"
+                rows={2}
+              />
+            </div>
+          ) : (
+            <div>
+              <p className="font-semibold text-white">{task.title}</p>
+              <p className="text-sm text-gray-200">{task.description}</p>
+            </div>
+          )}
+
+          <div className="mt-2 flex items-center gap-3">
+            <span
+              className={`rounded-full px-2 py-1 text-xs font-semibold ${
+                task.priority === "High"
+                  ? "bg-[#ff9f43] text-[#1e2124]"
+                  : task.priority === "Medium"
+                    ? "bg-[#ffcd4d] text-[#1e2124]"
+                    : "bg-[#6ed0a7] text-[#1e2124]"
+              }`}
+            >
+              {task.priority}
+            </span>
+            <span className="text-xs text-gray-300">{task.due}</span>
+            {!isEditing && (
+              <button
+                type="button"
+                onClick={onStartEdit}
+                className="text-xs text-[#8aa2ff] transition hover:text-[#a4b7ff]"
+              >
+                Edit
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 type AIOverlayProps = {
   isOpen: boolean;
   onClose: () => void;
@@ -47,21 +139,6 @@ export function AIOverlay({
       newSelected.add(id);
     }
     setSelectedTasks(newSelected);
-  };
-
-  const handleEdit = (id: string) => {
-    setEditingId(id);
-  };
-
-  const handleSaveEdit = (
-    id: string,
-    field: "title" | "description",
-    value: string
-  ) => {
-    setEditedTasks((prev) =>
-      prev.map((task) => (task.id === id ? { ...task, [field]: value } : task))
-    );
-    setEditingId(null);
   };
 
   const handleAddToKanban = async () => {
@@ -120,106 +197,24 @@ export function AIOverlay({
                 prompt to populate this list.
               </div>
             ) : (
-              editedTasks.map((task) => {
-                const isSelected = selectedTasks.has(task.id);
-                const isEditing = editingId === task.id;
-
-                return (
-                  <div
-                    key={task.id}
-                    className={`rounded-xl border p-4 transition ${
-                      isSelected
-                        ? "border-[#7289da] bg-[#7289da]/10"
-                        : "border-[#282b30] bg-[var(--surface-2)]"
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => handleToggleSelect(task.id)}
-                        className="mt-1 h-4 w-4 rounded border-[#282b30] bg-[var(--surface-3)] text-[#7289da] focus:ring-[#7289da]"
-                      />
-                      <div className="flex-1">
-                        {isEditing ? (
-                          <div className="flex flex-col gap-2">
-                            <input
-                              type="text"
-                              value={task.title}
-                              onChange={(e) =>
-                                setEditedTasks((prev) =>
-                                  prev.map((t) =>
-                                    t.id === task.id
-                                      ? { ...t, title: e.target.value }
-                                      : t
-                                  )
-                                )
-                              }
-                              onBlur={() => setEditingId(null)}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                  setEditingId(null);
-                                }
-                              }}
-                              className="rounded-lg border border-[#282b30] bg-[var(--surface-3)] px-3 py-2 text-white outline-none focus:border-[#7289da]"
-                              autoFocus
-                            />
-                            <textarea
-                              value={task.description}
-                              onChange={(e) =>
-                                setEditedTasks((prev) =>
-                                  prev.map((t) =>
-                                    t.id === task.id
-                                      ? { ...t, description: e.target.value }
-                                      : t
-                                  )
-                                )
-                              }
-                              onBlur={() => setEditingId(null)}
-                              className="rounded-lg border border-[#282b30] bg-[var(--surface-3)] px-3 py-2 text-sm text-gray-200 outline-none focus:border-[#7289da]"
-                              rows={2}
-                            />
-                          </div>
-                        ) : (
-                          <div>
-                            <p className="font-semibold text-white">
-                              {task.title}
-                            </p>
-                            <p className="text-sm text-gray-200">
-                              {task.description}
-                            </p>
-                          </div>
-                        )}
-                        <div className="mt-2 flex items-center gap-3">
-                          <span
-                            className={`rounded-full px-2 py-1 text-xs font-semibold ${
-                              task.priority === "High"
-                                ? "bg-[#ff9f43] text-[#1e2124]"
-                                : task.priority === "Medium"
-                                ? "bg-[#ffcd4d] text-[#1e2124]"
-                                : "bg-[#6ed0a7] text-[#1e2124]"
-                            }`}
-                          >
-                            {task.priority}
-                          </span>
-                          <span className="text-xs text-gray-300">
-                            {task.due}
-                          </span>
-                          {!isEditing && (
-                            <button
-                              type="button"
-                              onClick={() => handleEdit(task.id)}
-                              className="text-xs text-[#8aa2ff] transition hover:text-[#a4b7ff]"
-                            >
-                              Edit
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
+              editedTasks.map((task) => (
+                <AIOverlayTaskItem
+                  key={task.id}
+                  task={task}
+                  isSelected={selectedTasks.has(task.id)}
+                  isEditing={editingId === task.id}
+                  onToggleSelect={() => handleToggleSelect(task.id)}
+                  onStartEdit={() => setEditingId(task.id)}
+                  onStopEdit={() => setEditingId(null)}
+                  onChange={(patch) => {
+                    setEditedTasks((prev) =>
+                      prev.map((t) =>
+                        t.id === task.id ? { ...t, ...patch } : t
+                      )
+                    );
+                  }}
+                />
+              ))
             )}
           </div>
         </div>
