@@ -28,8 +28,13 @@ function useProjectSelectionSync(args: {
   selectedProject: string | null;
   setSelectedProject: (id: string | null) => void;
 }) {
-  const { pathname, searchParams, projects, selectedProject, setSelectedProject } =
-    args;
+  const {
+    pathname,
+    searchParams,
+    projects,
+    selectedProject,
+    setSelectedProject,
+  } = args;
 
   React.useEffect(() => {
     if (pathname !== "/features/kanban") return;
@@ -48,7 +53,9 @@ function useProjectSelectionSync(args: {
 
 function useRenameAutofocus(args: {
   renamingProjectId: string | null;
-  renameInputRefs: React.MutableRefObject<Record<string, HTMLInputElement | null>>;
+  renameInputRefs: React.MutableRefObject<
+    Record<string, HTMLInputElement | null>
+  >;
 }) {
   const { renamingProjectId, renameInputRefs } = args;
   React.useEffect(() => {
@@ -65,26 +72,36 @@ export function useSidebarContentController({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { projects, listLoading, error, createProject: createNewProject, updateProject, deleteProject } =
-    useProjects();
+  const {
+    projects,
+    listLoading,
+    error,
+    createProject: createNewProject,
+    updateProject,
+    deleteProject,
+  } = useProjects();
 
-  const [selectedProject, setSelectedProject] =
-    React.useState<string | null>(null);
+  const [selectedProject, setSelectedProject] = React.useState<string | null>(
+    null,
+  );
   const [creating, setCreating] = React.useState(false);
   const [localError, setLocalError] = React.useState<string | null>(null);
-  const [renamingProjectId, setRenamingProjectId] =
-    React.useState<string | null>(null);
+  const [renamingProjectId, setRenamingProjectId] = React.useState<
+    string | null
+  >(null);
   const [tempProjectName, setTempProjectName] = React.useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = React.useState(false);
-  const [newProjectName, setNewProjectName] = React.useState("Untitled Project");
+  const [newProjectName, setNewProjectName] =
+    React.useState("Untitled Project");
   const [isMounted, setIsMounted] = React.useState(false);
   const [projectPendingDelete, setProjectPendingDelete] =
     React.useState<ProjectRecord | null>(null);
   const [deleteError, setDeleteError] = React.useState<string | null>(null);
   const [isDeletingProject, setIsDeletingProject] = React.useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = React.useState(false);
-  const renameInputRefs =
-    React.useRef<Record<string, HTMLInputElement | null>>({});
+  const renameInputRefs = React.useRef<Record<string, HTMLInputElement | null>>(
+    {},
+  );
 
   React.useEffect(() => {
     setIsMounted(true);
@@ -123,7 +140,7 @@ export function useSidebarContentController({
       }
     } catch (err) {
       setLocalError(
-        err instanceof Error ? err.message : "Unable to create a project."
+        err instanceof Error ? err.message : "Unable to create a project.",
       );
     } finally {
       setCreating(false);
@@ -137,7 +154,7 @@ export function useSidebarContentController({
       router.push(`/features/kanban?project=${projectId}`);
       onProjectSelect?.();
     },
-    [onProjectSelect, router]
+    [onProjectSelect, router],
   );
 
   const handleRenameClick = React.useCallback(
@@ -151,7 +168,7 @@ export function useSidebarContentController({
         if (input) focusAndSelect(input);
       }, 50);
     },
-    [projects]
+    [projects],
   );
 
   const handleRenameSave = React.useCallback(
@@ -177,12 +194,12 @@ export function useSidebarContentController({
         setTempProjectName("");
       } catch (err) {
         setLocalError(
-          err instanceof Error ? err.message : "Unable to rename project."
+          err instanceof Error ? err.message : "Unable to rename project.",
         );
         setTempProjectName(originalName);
       }
     },
-    [projects, tempProjectName, updateProject]
+    [projects, tempProjectName, updateProject],
   );
 
   const handleRenameCancel = React.useCallback(() => {
@@ -198,7 +215,7 @@ export function useSidebarContentController({
       setDeleteError(null);
       setLocalError(null);
     },
-    [projects]
+    [projects],
   );
 
   const handleConfirmDelete = React.useCallback(async () => {
@@ -211,7 +228,7 @@ export function useSidebarContentController({
 
       if (selectedProject === projectPendingDelete.id) {
         const remainingProjects = projects.filter(
-          (p) => p.id !== projectPendingDelete.id
+          (p) => p.id !== projectPendingDelete.id,
         );
         if (remainingProjects.length > 0) {
           router.push(`/features/kanban?project=${remainingProjects[0].id}`);
@@ -222,7 +239,7 @@ export function useSidebarContentController({
       setProjectPendingDelete(null);
     } catch (err) {
       setDeleteError(
-        err instanceof Error ? err.message : "Unable to delete project."
+        err instanceof Error ? err.message : "Unable to delete project.",
       );
     } finally {
       setIsDeletingProject(false);
@@ -240,10 +257,41 @@ export function useSidebarContentController({
     return projects.find((p) => p.id === selectedProject) ?? null;
   }, [projects, selectedProject]);
 
-  return { pathname, projects, listLoading, error, isMounted, creating, localError, selectedProject, renamingProjectId, tempProjectName, renameInputRefs, isCreateModalOpen, newProjectName, projectPendingDelete, deleteError, isDeletingProject, isInviteModalOpen, setIsInviteModalOpen, currentProject, openCreateModal, closeCreateModal, setNewProjectName, handleCreateProject, handleSelectProject, handleRenameClick, setTempProjectName, handleRenameSave, handleRenameCancel, handleDeleteClick, handleConfirmDelete, handleCancelDelete };
+  return {
+    pathname,
+    projects,
+    listLoading,
+    error,
+    isMounted,
+    creating,
+    localError,
+    selectedProject,
+    renamingProjectId,
+    tempProjectName,
+    renameInputRefs,
+    isCreateModalOpen,
+    newProjectName,
+    projectPendingDelete,
+    deleteError,
+    isDeletingProject,
+    isInviteModalOpen,
+    setIsInviteModalOpen,
+    currentProject,
+    openCreateModal,
+    closeCreateModal,
+    setNewProjectName,
+    handleCreateProject,
+    handleSelectProject,
+    handleRenameClick,
+    setTempProjectName,
+    handleRenameSave,
+    handleRenameCancel,
+    handleDeleteClick,
+    handleConfirmDelete,
+    handleCancelDelete,
+  };
 }
 
 export type SidebarContentController = ReturnType<
   typeof useSidebarContentController
 >;
-
