@@ -294,6 +294,7 @@ export function SidebarContentLayout({
   isDeletingProject,
   isInviteModalOpen,
   setIsInviteModalOpen,
+  pendingInviteCount,
   currentProject,
   openCreateModal,
   closeCreateModal,
@@ -336,6 +337,11 @@ export function SidebarContentLayout({
         >
           <Folder className="h-4 w-4 shrink-0" />
           Inbox
+          {pendingInviteCount > 0 && (
+            <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+              {pendingInviteCount}
+            </span>
+          )}
         </Link>
 
         <div className="mb-4 flex flex-shrink-0 items-center justify-between">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
 import { useSupabaseUser } from "@/core/auth/use-supabase-user";
 import {
@@ -20,6 +20,7 @@ type HeaderProps = {
 export function Header({ onMenuClick }: HeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { user } = useSupabaseUser();
   const [showAccountMenu, setShowAccountMenu] = useState(false);
 
@@ -72,9 +73,10 @@ export function Header({ onMenuClick }: HeaderProps) {
           
           {pathname === "/features/kanban" && (
             <MembersSection
-              avatarUrl={avatarUrl}
-              derivedName={derivedName}
-              initial={initial}
+              activeProjectId={searchParams.get("project") ?? null}
+              currentUserAvatarUrl={avatarUrl}
+              currentUserName={derivedName}
+              currentUserInitial={initial}
             />
           )}
    

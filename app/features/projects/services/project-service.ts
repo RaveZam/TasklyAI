@@ -90,7 +90,6 @@ export async function getProjectsByUser(userId: string): Promise<{
     .from(PROJECT_MEMBERS_TABLE)
     .select("*, projects (*)") 
     .eq("user_id", userId)
-    .eq("role", "owner")
     .order("created_at", { ascending: true });
 
   if (error) {

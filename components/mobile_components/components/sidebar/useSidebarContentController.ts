@@ -4,6 +4,8 @@ import * as React from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { useProjects } from "@/app/features/projects/hooks/projects-provider";
+import { useSupabaseUser } from "@/core/auth/use-supabase-user";
+import { getPendingInviteCount } from "@/app/features/invite_member/services/invite_member_service";
 import type { ProjectRecord } from "@/app/features/projects/services/project-service";
 
 type UseSidebarContentControllerArgs = {
@@ -99,13 +101,23 @@ export function useSidebarContentController({
   const [deleteError, setDeleteError] = React.useState<string | null>(null);
   const [isDeletingProject, setIsDeletingProject] = React.useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = React.useState(false);
+  const [pendingInviteCount, setPendingInviteCount] = React.useState(0);
   const renameInputRefs = React.useRef<Record<string, HTMLInputElement | null>>(
     {},
   );
 
+  const { user } = useSupabaseUser();
+
   React.useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  React.useEffect(() => {
+    if (!user?.id) return;
+    getPendingInviteCount(user.id)
+      .then(setPendingInviteCount)
+      .catch(console.error);
+  }, [user?.id]);
 
   useProjectSelectionSync({
     pathname,
@@ -276,6 +288,7 @@ export function useSidebarContentController({
     isDeletingProject,
     isInviteModalOpen,
     setIsInviteModalOpen,
+    pendingInviteCount,
     currentProject,
     openCreateModal,
     closeCreateModal,
