@@ -4,25 +4,16 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 import { KanbanBoard } from "@/components/ui/kanban-board";
-import { AIOverlay } from "@/components/ui/ai-overlay";
+import { AIChatDrawer, type GeneratedTask } from "@/components/ui/ai-chat-drawer";
 import { CreateTaskModal } from "@/components/ui/create-task-modal";
 import type { Task } from "@/types/kanban";
 import { useProjects } from "@/app/features/projects/hooks/projects-provider";
 import {
   createTask,
-  getTasksByProject,
+  getTasksByProjectWithCreators,
   updateTask,
   deleteTask,
 } from "@/app/features/tasks/services/task-service";
-import { generateTasksFromAI } from "@/app/features/ai_task_suggestions/services/ai-task-service";
-
-type GeneratedTask = {
-  id: string;
-  title: string;
-  description: string;
-  priority: Task["priority"];
-  due: string;
-};
 
 export default function KanbanFeaturePage() {
   const searchParams = useSearchParams();
@@ -32,10 +23,7 @@ export default function KanbanFeaturePage() {
     error: projectsError,
     ensureDefaultProject,
   } = useProjects();
-  const [projectDescription, setProjectDescription] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [showOverlay, setShowOverlay] = useState(false);
-  const [generatedTasks, setGeneratedTasks] = useState<GeneratedTask[]>([]);
+  const [showAIDrawer, setShowAIDrawer] = useState(false);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
   const [showCreateTaskModal, setShowCreateTaskModal] = useState(false);
@@ -74,7 +62,7 @@ export default function KanbanFeaturePage() {
 
   const activeProject = useMemo(
     () => projects.find((project) => project.id === activeProjectId) ?? null,
-    [activeProjectId, projects]
+    [activeProjectId, projects],
   );
 
   // Load tasks when project changes
@@ -89,14 +77,16 @@ export default function KanbanFeaturePage() {
     const loadTasks = async () => {
       setTasksLoading(true);
       try {
-        const taskRecords = await getTasksByProject(activeProjectId);
+        const taskRecords = await getTasksByProjectWithCreators(activeProjectId);
         const mappedTasks: Task[] = taskRecords.map((record) => ({
           id: record.id,
           title: record.title,
           description: record.description || "",
           status: (record.status as Task["status"]) || "todo",
           priority: (record.priority as Task["priority"]) || "Medium",
-          due: "", // Schema doesn't have due date, but Task type requires it
+          due: "",
+          creatorAvatarUrl: record.creatorAvatarUrl,
+          creatorName: record.creatorName,
         }));
         setTasks(mappedTasks);
       } catch (error) {
@@ -109,41 +99,6 @@ export default function KanbanFeaturePage() {
 
     void loadTasks();
   }, [activeProjectId]);
-
-  const handleGenerate = async () => {
-    if (!projectDescription.trim()) return;
-
-    setIsLoading(true);
-    setShowOverlay(false);
-    setGeneratedTasks([]);
-
-    try {
-      // Call AI service to generate tasks
-      const aiTasks = await generateTasksFromAI(projectDescription);
-
-      // Map AI tasks to GeneratedTask format
-      const mappedTasks: GeneratedTask[] = aiTasks.map((task, index) => ({
-        id: `ai-task-${Date.now()}-${index}`,
-        title: task.title,
-        description: task.description,
-        priority: task.priority,
-        due: "", // AI doesn't generate due dates
-      }));
-
-      setGeneratedTasks(mappedTasks);
-      setShowOverlay(true);
-    } catch (error) {
-      console.error("Failed to generate tasks:", error);
-      // You might want to show an error message to the user here
-      alert(
-        error instanceof Error
-          ? error.message
-          : "Failed to generate tasks. Please try again."
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleAddToKanban = async (tasksToAdd: GeneratedTask[]) => {
     if (!activeProjectId) return;
@@ -158,8 +113,8 @@ export default function KanbanFeaturePage() {
             description: task.description,
             priority: task.priority,
             status: "todo",
-          })
-        )
+          }),
+        ),
       );
 
       const newTasks: Task[] = createdTasks.map((task) => ({
@@ -168,18 +123,18 @@ export default function KanbanFeaturePage() {
         description: task.description || "",
         status: (task.status as Task["status"]) || "todo",
         priority: (task.priority as Task["priority"]) || "Medium",
-        due: "", // No due date from AI
+        due: "",
+        creatorAvatarUrl: null,
+        creatorName: null,
       }));
 
       setTasks((prev) => [...prev, ...newTasks]);
-      setShowOverlay(false);
-      setProjectDescription("");
     } catch (error) {
       console.error("Failed to save AI tasks to Supabase:", error);
       alert(
         error instanceof Error
           ? error.message
-          : "Failed to save AI tasks. Please try again."
+          : "Failed to save AI tasks. Please try again.",
       );
     }
   };
@@ -207,6 +162,8 @@ export default function KanbanFeaturePage() {
         status: (newTask.status as Task["status"]) || "todo",
         priority: (newTask.priority as Task["priority"]) || "Medium",
         due: "",
+        creatorAvatarUrl: null,
+        creatorName: null,
       };
 
       setTasks((prev) => [...prev, mappedTask]);
@@ -247,10 +204,12 @@ export default function KanbanFeaturePage() {
         status: (updatedTask.status as Task["status"]) || "todo",
         priority: (updatedTask.priority as Task["priority"]) || "Medium",
         due: "",
+        creatorAvatarUrl: editingTask.creatorAvatarUrl,
+        creatorName: editingTask.creatorName,
       };
 
       setTasks((prev) =>
-        prev.map((task) => (task.id === editingTask.id ? mappedTask : task))
+        prev.map((task) => (task.id === editingTask.id ? mappedTask : task)),
       );
       setEditingTask(null);
     } catch (error) {
@@ -289,7 +248,7 @@ export default function KanbanFeaturePage() {
       alert(
         error instanceof Error
           ? error.message
-          : "Failed to delete task. Please try again."
+          : "Failed to delete task. Please try again.",
       );
     }
   };
@@ -348,67 +307,6 @@ export default function KanbanFeaturePage() {
             <p className="text-sm text-red-400">{projectsError}</p>
           )}
 
-          <section className="flex flex-col gap-4 rounded-2xl border border-[#282b30] bg-[var(--surface-1)] p-6">
-            <div className="flex flex-col gap-2">
-              <h2 className="text-lg font-semibold text-white">
-                Generate Your Task
-              </h2>
-              <p className="text-sm text-gray-400">
-                What tasks do you wanna work on next? I&apos;ll break them down
-                for you to help with your goals.
-              </p>
-            </div>
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <input
-                id="suggestion"
-                type="text"
-                value={projectDescription}
-                onChange={(e) => setProjectDescription(e.target.value)}
-                placeholder="What do you want to work on next?"
-                className="w-full rounded-lg border border-[#282b30] bg-[#1e2124] px-4 py-3 text-gray-100 outline-none transition focus:border-[#7289da] focus:ring-2 focus:ring-[#7289da]/30"
-                disabled={isLoading}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !isLoading) {
-                    handleGenerate();
-                  }
-                }}
-              />
-              <button
-                type="button"
-                onClick={handleGenerate}
-                disabled={isLoading || !projectDescription.trim()}
-                className="rounded-lg bg-[#7289da] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#7f97df] disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {isLoading ? (
-                  <span className="flex items-center gap-2">
-                    <svg
-                      className="h-4 w-4 animate-spin"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      />
-                    </svg>
-                    Thinking...
-                  </span>
-                ) : (
-                  "Generate"
-                )}
-              </button>
-            </div>
-          </section>
-
           {tasksLoading ? (
             <div className="flex items-center justify-center rounded-2xl border border-[#282b30] bg-[var(--surface-1)] p-12">
               <div className="flex flex-col items-center gap-3">
@@ -445,10 +343,21 @@ export default function KanbanFeaturePage() {
         </>
       )}
 
-      <AIOverlay
-        isOpen={showOverlay}
-        onClose={() => setShowOverlay(false)}
-        generatedTasks={generatedTasks}
+      {/* AI FAB */}
+      <button
+        type="button"
+        onClick={() => setShowAIDrawer(true)}
+        aria-label="Open AI Assistant"
+        className="fixed bottom-6 right-6 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-[#7289da] text-white shadow-lg transition hover:bg-[#7f97df] hover:scale-105 active:scale-95"
+      >
+        <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456Z" />
+        </svg>
+      </button>
+
+      <AIChatDrawer
+        isOpen={showAIDrawer}
+        onClose={() => setShowAIDrawer(false)}
         onAddToKanban={handleAddToKanban}
       />
 

@@ -18,6 +18,7 @@ import {
   deleteProject,
   type ProjectRecord,
 } from "@/app/features/projects/services/project-service";
+import { leaveProject } from "@/app/features/projects/services/project-members-service";
 import { useEnsureOneProject } from "./useEnsureOneProject";
 
 const DEFAULT_PROJECT_NAME = "Untitled Project";
@@ -32,6 +33,7 @@ type ProjectsContextValue = {
   createProject: (name?: string) => Promise<ProjectRecord | null>;
   updateProject: (id: string, name: string) => Promise<ProjectRecord | null>;
   deleteProject: (id: string) => Promise<void>;
+  leaveProject: (id: string) => Promise<void>;
 };
 
 const ProjectsContext = createContext<ProjectsContextValue | null>(null);
@@ -120,7 +122,11 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
           name,
           userId: user.id,
         });
-        setProjects((prev) => [...prev, created]);
+        setProjects((prev) => {
+          const updated = [...prev, created];
+          projectsRef.current = updated;
+          return updated;
+        });
         return created;
       } catch (err) {
         setError(
@@ -192,6 +198,29 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
     [user?.id]
   );
 
+  const leaveProjectById = useCallback(
+    async (id: string) => {
+      if (!user?.id) {
+        setError("No authenticated user. Please sign in again.");
+        return;
+      }
+
+      setError(null);
+
+      try {
+        await leaveProject(id, user.id);
+        setProjects((prev) => prev.filter((p) => p.id !== id));
+        projectsRef.current = projectsRef.current.filter((p) => p.id !== id);
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Unable to leave the project."
+        );
+        throw err;
+      }
+    },
+    [user?.id]
+  );
+
   useEffect(() => {
     projectsRef.current = projects;
   }, [projects]);
@@ -218,11 +247,13 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
       createProject: createNewProject,
       updateProject: updateProjectName,
       deleteProject: deleteProjectById,
+      leaveProject: leaveProjectById,
     }),
     [
       authLoading,
       createNewProject,
       deleteProjectById,
+      leaveProjectById,
       ensureDefaultProject,
       error,
       isEnsuringDefault,

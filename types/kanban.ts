@@ -7,5 +7,7 @@ export type Task = {
   status: Status;
   priority: "Low" | "Medium" | "High";
   due: string;
+  creatorAvatarUrl: string | null;
+  creatorName: string | null;
 };
 

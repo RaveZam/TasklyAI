@@ -18,6 +18,7 @@ type SidebarProjectListProps = {
   renamingProjectId: string | null;
   tempProjectName: string;
   renameInputRefs: React.MutableRefObject<Record<string, HTMLInputElement | null>>;
+  ownerProjectIds: Set<string>;
   onSelectProject: (projectId: string) => void;
   onRenameClick: (projectId: string) => void;
   onTempProjectNameChange: (next: string) => void;
@@ -35,6 +36,7 @@ export function SidebarProjectList({
   renamingProjectId,
   tempProjectName,
   renameInputRefs,
+  ownerProjectIds,
   onSelectProject,
   onRenameClick,
   onTempProjectNameChange,
@@ -76,6 +78,8 @@ export function SidebarProjectList({
       {projects.map((project) => {
         const isRenaming = renamingProjectId === project.id;
         const isSelected = selectedProject === project.id;
+
+        const isOwner = ownerProjectIds.has(project.id);
 
         return (
           <div
@@ -192,7 +196,7 @@ export function SidebarProjectList({
                       }}
                       className="cursor-pointer text-red-400 focus:bg-red-500/10 focus:text-red-400"
                     >
-                      Delete Project
+                      {isOwner ? "Delete Project" : "Leave Project"}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

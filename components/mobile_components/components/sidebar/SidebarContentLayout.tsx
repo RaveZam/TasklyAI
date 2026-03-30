@@ -104,6 +104,82 @@ function CreateProjectModal({
   );
 }
 
+function LeaveProjectModal({
+  isOpen,
+  isLeaving,
+  projectName,
+  error,
+  onCancel,
+  onConfirm,
+}: {
+  isOpen: boolean;
+  isLeaving: boolean;
+  projectName: string;
+  error: string | null;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  if (!isOpen) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/70 p-4">
+      <div className="w-full max-w-md rounded-2xl border border-[#2f3238] bg-[var(--surface-1)] p-6 shadow-2xl">
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <p className="text-lg font-semibold text-white">Leave project?</p>
+            <p className="text-xs text-gray-500">
+              You&apos;ll be removed from&nbsp;
+              <span className="text-white">{projectName}</span>.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={isLeaving}
+            className="rounded-lg p-2 text-gray-400 transition hover:bg-[var(--surface-2)] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="rounded-xl border border-[#2f3238] bg-[#181b1f] p-4 text-sm text-gray-300">
+          <p className="font-semibold text-white">You won&apos;t be able to rejoin unless re-invited.</p>
+          <p className="mt-2 text-xs text-gray-400">
+            Your tasks will remain in the project. Only the project owner can delete the project.
+          </p>
+          {error ? (
+            <p className="mt-3 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-300">
+              {error}
+            </p>
+          ) : null}
+        </div>
+
+        <div className="mt-6 flex justify-end gap-3">
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={isLeaving}
+            className="rounded-lg border border-[#2f3238] px-4 py-2 text-sm text-gray-300 transition hover:bg-[var(--surface-2)] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={isLeaving}
+            className="rounded-lg bg-[#d9534f] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#e26460] disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isLeaving ? "Leaving..." : "Leave project"}
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
 function DeleteProjectModal({
   isOpen,
   isDeleting,
@@ -308,6 +384,9 @@ export function SidebarContentLayout({
   handleDeleteClick,
   handleConfirmDelete,
   handleCancelDelete,
+  handleConfirmLeave,
+  isLeaveMode,
+  ownerProjectIds,
 }: SidebarContentLayoutProps) {
   return (
     <>
@@ -380,6 +459,7 @@ export function SidebarContentLayout({
             renamingProjectId={renamingProjectId}
             tempProjectName={tempProjectName}
             renameInputRefs={renameInputRefs}
+            ownerProjectIds={ownerProjectIds}
             onSelectProject={handleSelectProject}
             onRenameClick={handleRenameClick}
             onTempProjectNameChange={setTempProjectName}
@@ -406,8 +486,17 @@ export function SidebarContentLayout({
         onCreate={() => void handleCreateProject()}
       />
 
+      <LeaveProjectModal
+        isOpen={isMounted && Boolean(projectPendingDelete) && isLeaveMode}
+        isLeaving={isDeletingProject}
+        projectName={projectPendingDelete?.name ?? ""}
+        error={deleteError}
+        onCancel={handleCancelDelete}
+        onConfirm={() => void handleConfirmLeave()}
+      />
+
       <DeleteProjectModal
-        isOpen={isMounted && Boolean(projectPendingDelete)}
+        isOpen={isMounted && Boolean(projectPendingDelete) && !isLeaveMode}
         isDeleting={isDeletingProject}
         projectName={projectPendingDelete?.name ?? ""}
         error={deleteError}
