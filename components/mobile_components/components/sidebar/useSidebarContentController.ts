@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useProjects } from "@/app/features/projects/hooks/projects-provider";
 import { useSupabaseUser } from "@/core/auth/use-supabase-user";
 import { getPendingInviteCount } from "@/app/features/invite_member/services/invite_member_service";
+import { getMyMemberships } from "@/app/features/projects/services/project-members-service";
 import type { ProjectRecord } from "@/app/features/projects/services/project-service";
 
 type UseSidebarContentControllerArgs = {
@@ -81,6 +82,7 @@ export function useSidebarContentController({
     createProject: createNewProject,
     updateProject,
     deleteProject,
+    leaveProject,
   } = useProjects();
 
   const [selectedProject, setSelectedProject] = React.useState<string | null>(
@@ -102,6 +104,9 @@ export function useSidebarContentController({
   const [isDeletingProject, setIsDeletingProject] = React.useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = React.useState(false);
   const [pendingInviteCount, setPendingInviteCount] = React.useState(0);
+  const [ownerProjectIds, setOwnerProjectIds] = React.useState<Set<string>>(
+    new Set()
+  );
   const renameInputRefs = React.useRef<Record<string, HTMLInputElement | null>>(
     {},
   );
@@ -118,6 +123,20 @@ export function useSidebarContentController({
       .then(setPendingInviteCount)
       .catch(console.error);
   }, [user?.id]);
+
+  React.useEffect(() => {
+    if (!user?.id) return;
+    getMyMemberships(user.id)
+      .then((memberships) => {
+        const ids = new Set(
+          memberships
+            .filter((m) => m.role === "owner")
+            .map((m) => m.project_id)
+        );
+        setOwnerProjectIds(ids);
+      })
+      .catch(console.error);
+  }, [user?.id, projects]);
 
   useProjectSelectionSync({
     pathname,
@@ -264,6 +283,41 @@ export function useSidebarContentController({
     setDeleteError(null);
   }, [isDeletingProject]);
 
+  const handleConfirmLeave = React.useCallback(async () => {
+    if (!projectPendingDelete) return;
+    setIsDeletingProject(true);
+    setDeleteError(null);
+
+    try {
+      await leaveProject(projectPendingDelete.id);
+
+      if (selectedProject === projectPendingDelete.id) {
+        const remainingProjects = projects.filter(
+          (p) => p.id !== projectPendingDelete.id
+        );
+        if (remainingProjects.length > 0) {
+          router.push(`/features/kanban?project=${remainingProjects[0].id}`);
+        } else {
+          router.push("/");
+        }
+      }
+      setProjectPendingDelete(null);
+    } catch (err) {
+      setDeleteError(
+        err instanceof Error ? err.message : "Unable to leave project."
+      );
+    } finally {
+      setIsDeletingProject(false);
+    }
+  }, [leaveProject, projectPendingDelete, projects, router, selectedProject]);
+
+  const isLeaveMode = React.useMemo(
+    () =>
+      projectPendingDelete !== null &&
+      !ownerProjectIds.has(projectPendingDelete.id),
+    [projectPendingDelete, ownerProjectIds]
+  );
+
   const currentProject = React.useMemo(() => {
     if (!selectedProject) return null;
     return projects.find((p) => p.id === selectedProject) ?? null;
@@ -302,6 +356,9 @@ export function useSidebarContentController({
     handleDeleteClick,
     handleConfirmDelete,
     handleCancelDelete,
+    handleConfirmLeave,
+    isLeaveMode,
+    ownerProjectIds,
   };
 }
 

@@ -28,6 +28,31 @@ function extractAvatarUrl(meta: Record<string, unknown>): string | null {
   return null;
 }
 
+export async function getMyMemberships(
+  userId: string
+): Promise<{ project_id: string; role: string }[]> {
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase
+    .from("project_members")
+    .select("project_id, role")
+    .eq("user_id", userId);
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function leaveProject(
+  projectId: string,
+  userId: string
+): Promise<void> {
+  const supabase = getSupabaseClient();
+  const { error } = await supabase
+    .from("project_members")
+    .delete()
+    .eq("project_id", projectId)
+    .eq("user_id", userId);
+  if (error) throw error;
+}
+
 export async function getProjectMemberProfiles(projectId: string): Promise<MemberProfile[]> {
   const supabase = getSupabaseClient();
 

@@ -24,43 +24,33 @@ export async function POST(request: NextRequest) {
     const model = "gemini-2.5-flash";
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
-    const prompt = `You are an expert task management assistant specializing in helping students and small teams break down projects into actionable next steps. Your goal is to generate a prioritized, sequential list of tasks that will help users make immediate progress toward their project goal.
+    const systemInstruction = `You are a helpful study and project assistant for students. Your job is to break down projects into simple, clear tasks that are easy to understand and act on.
 
-    Based on the following project description, generate 5-7 specific, actionable tasks that represent the logical next steps to accomplish this goal. Consider:
-    
-    1. **Task Sequencing**: Order tasks logically - foundational tasks should come before dependent ones. Think about what needs to happen first to unblock other work.
-    
-    2. **Actionability**: Each task should be:
-       - Specific enough that someone knows exactly what to do
-       - Small enough to be completed in a reasonable timeframe (hours to a few days)
-       - Clear about the deliverable or outcome
-    
-    3. **Priority Assignment**:
-       - **High**: Critical path items, blockers for other tasks, or time-sensitive work
-       - **Medium**: Important but not blocking, or can be done in parallel
-       - **Low**: Nice-to-have, can be deferred, or polish/optimization work
-    
-    4. **Context Awareness**: 
-       - For projects that seem to you already has progress, consider the next steps to take to complete the project, skip the introductions and just focus on detailing the tasks that are left to complete the project.
-       - For Coding Projects: Consider code structure, testing, configuring 3rd party services and debugging needs
-       - For academic projects: Consider research, planning, and documentation needs
-       - For team projects: Consider collaboration, communication, and coordination tasks
-       - Break down large goals into smaller, manageable chunks
-    
-    Project description: "${description}"
-    
-    Generate tasks that represent the immediate next steps (not the entire project). Focus on what should be done first to make progress.
-    
-    Return the response as a JSON array of tasks with this exact format:
-    [
-      {
-        "title": "Task title here (max 50 characters)",
-        "description": "Clear, actionable description in 1-2 sentences explaining what needs to be done and why",
-        "priority": "Low" | "Medium" | "High"
-      }
-    ]
-    
-    Only return the JSON array, no additional text or markdown formatting.`;
+RULES:
+- Write like you're talking to a student, not an engineer. Keep language simple and direct.
+- Task titles should be short and clear — 3 to 6 words max (e.g. "Build the login page", "Connect to the database").
+- Task descriptions should be 2-3 sentences: what to do, how to do it, and what done looks like. No jargon unless it's obvious from the description.
+- Avoid overly technical or corporate language. A task like "Implement OAuth2 token refresh lifecycle" should just be "Set up Google login".
+- If the project is already in progress, skip setup steps and focus on what comes next.
+- Order tasks so the most important or first thing to do comes first.`;
+
+    const userPrompt = `Project description: "${description}"
+
+Generate 5-7 simple, clear tasks that a student can start working on right away.
+
+Priority rules:
+- High: Must be done first or blocks everything else
+- Medium: Important but can be done alongside other tasks
+- Low: Nice to have, or can be done last
+
+Return ONLY a JSON array in this exact format, no markdown, no extra text:
+[
+  {
+    "title": "Short task title (3-6 words)",
+    "description": "2-3 sentences explaining what to do, how to do it, and what it looks like when it's done.",
+    "priority": "Low" | "Medium" | "High"
+  }
+]`;
 
     const response = await fetch(url, {
       method: "POST",
@@ -68,15 +58,19 @@ export async function POST(request: NextRequest) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
+        systemInstruction: {
+          parts: [{ text: systemInstruction }],
+        },
         contents: [
           {
-            parts: [
-              {
-                text: prompt,
-              },
-            ],
+            role: "user",
+            parts: [{ text: userPrompt }],
           },
         ],
+        generationConfig: {
+          temperature: 0.7,
+          topP: 0.9,
+        },
       }),
     });
 

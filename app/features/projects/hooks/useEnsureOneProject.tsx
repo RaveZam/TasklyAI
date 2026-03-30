@@ -3,7 +3,6 @@
 import { useCallback, useRef } from "react";
 import {
   createProject,
-  addProjectMember,
   type ProjectRecord,
 } from "@/app/features/projects/services/project-service";
 
@@ -54,15 +53,8 @@ export function useEnsureOneProject({
         }
 
         const created = await createProject({
-       
           name: DEFAULT_PROJECT_NAME,
           userId,
-        });
-
-        await addProjectMember({
-          projectId: created.id,
-          userId,
-          role: "owner",
         });
 
         setProjects([created]);

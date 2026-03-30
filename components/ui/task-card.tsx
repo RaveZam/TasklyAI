@@ -91,7 +91,21 @@ export function TaskCard({ task, index, onEdit, onDelete }: TaskCardProps) {
 
             <div className="mt-3 flex items-center justify-between text-sm text-gray-300">
               <div className="flex items-center gap-2">
-                <span>{task.due}</span>
+                {task.creatorAvatarUrl ? (
+                  <img
+                    src={task.creatorAvatarUrl}
+                    alt={task.creatorName ?? "Creator"}
+                    title={task.creatorName ?? undefined}
+                    className="h-6 w-6 rounded-full object-cover ring-1 ring-[#282b30]"
+                  />
+                ) : task.creatorName ? (
+                  <div
+                    className="flex h-6 w-6 items-center justify-center rounded-full bg-[#7289da] text-[10px] font-semibold text-white ring-1 ring-[#282b30]"
+                    title={task.creatorName}
+                  >
+                    {task.creatorName.charAt(0).toUpperCase()}
+                  </div>
+                ) : null}
               </div>
               <span className="uppercase tracking-[0.3em] text-[#7289da]">
                 {task.status === "todo" && "Queued"}
@@ -140,6 +154,27 @@ export function TaskCard({ task, index, onEdit, onDelete }: TaskCardProps) {
               <span className="text-gray-400">Due date</span>
               <span className="text-white">{task.due}</span>
             </div>
+            {(task.creatorAvatarUrl || task.creatorName) && (
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400">Created by</span>
+                <div className="flex items-center gap-2">
+                  {task.creatorAvatarUrl ? (
+                    <img
+                      src={task.creatorAvatarUrl}
+                      alt={task.creatorName ?? "Creator"}
+                      className="h-6 w-6 rounded-full object-cover ring-1 ring-[#282b30]"
+                    />
+                  ) : (
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#7289da] text-[10px] font-semibold text-white ring-1 ring-[#282b30]">
+                      {task.creatorName!.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  {task.creatorName && (
+                    <span className="text-white">{task.creatorName}</span>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           <DialogFooter className="mt-8 flex flex-wrap justify-end gap-3 sm:justify-end">
