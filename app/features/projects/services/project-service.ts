@@ -1,11 +1,10 @@
-import { useSupabaseUser } from "@/core/auth/use-supabase-user";
 import { getSupabaseClient } from "@/core/supabase/client";
 
 export type ProjectRecord = {
   id: string;
   name: string;
   created_at: string;
-}; 
+};
 
 const PROJECTS_TABLE = "projects";
 const PROJECT_MEMBERS_TABLE = "project_members";
@@ -91,21 +90,20 @@ export async function getProjectsByUser(userId: string): Promise<{
     .from(PROJECT_MEMBERS_TABLE)
     .select("*, projects (*)") 
     .eq("user_id", userId)
-    .eq("role", "owner")
     .order("created_at", { ascending: true });
 
   if (error) {
     throw error;
   }
 
-  const projects: ProjectRecord[] = (data ?? [])
-  .map((member: any) => member.projects)
-  .filter((project: ProjectRecord | null) => project !== null) as ProjectRecord[];
+  type ProjectMemberWithProject = { projects: ProjectRecord | null };
+  const projects = (data ?? [])
+    .map((member: ProjectMemberWithProject) => member.projects)
+    .filter((project): project is ProjectRecord => project !== null);
 
-  console.log("projects", projects);
   return {
     status,
-    data: projects ?? [],
+    data: projects,
   };
 }
 
